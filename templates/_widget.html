@@ -1,0 +1,1668 @@
+<style>
+			/* ══════════════════════════════════════════
+       WIDGET STYLES
+    ══════════════════════════════════════════ */
+			:root {
+				--soil: #3d2b1f;
+				--bark: #5c3d2e;
+				--leaf: #2d6a4f;
+				--leaf-light: #40916c;
+				--sprout: #52b788;
+				--mint: #b7e4c7;
+				--cream: #fdf8f0;
+				--petal: #f4e9d8;
+				--gold: #e9b44c;
+				--sky: #d8f3dc;
+				--shadow: rgba(61, 43, 31, 0.12);
+				--bg-widget: #fdf8f0;
+				--bg-input-area: #ffffff;
+				--bg-input-row: #f4e9d8;
+				--bg-bubble-bot: #ffffff;
+				--bg-suggestions: #f4e9d8;
+				--border-input: rgba(45, 106, 79, 0.18);
+				--border-sug: rgba(61, 43, 31, 0.08);
+				--text-response: #1a1a1a;
+				--text-footer: rgba(61, 43, 31, 0.4);
+				--text-input: #3d2b1f;
+				--text-placeholder: rgba(61, 43, 31, 0.38);
+				--scrollbar-thumb: #b7e4c7;
+				--typing-bubble-bg: #ffffff;
+				--typing-border: rgba(45, 106, 79, 0.15);
+				--section-border: rgba(45, 106, 79, 0.1);
+				--welcome-bg: linear-gradient(135deg, #f0fdf4, #dcfce7);
+				--welcome-border: rgba(45, 106, 79, 0.15);
+				--welcome-tag-bg: #ffffff;
+				--pill-bg: #ffffff;
+				--pill-border: rgba(45, 106, 79, 0.2);
+				--sim-bar-bg: #e2e8f0;
+			}
+
+			/* ── DARK MODE ── */
+			html.dark {
+				--soil: #022c22;
+				--bark: #0f172a;
+				--leaf: #10b981;
+				--leaf-light: #34d399;
+				--sprout: #6ee7b7;
+				--mint: #064e3b;
+				--cream: #020617;
+				--petal: #0f172a;
+				--gold: #f59e0b;
+				--sky: #0f172a;
+				--shadow: rgba(0, 0, 0, 0.4);
+				--bg-widget: #0f172a;
+				--bg-input-area: #1e293b;
+				--bg-input-row: #0f172a;
+				--bg-bubble-bot: #1e293b;
+				--bg-suggestions: #020617;
+				--border-input: rgba(16, 185, 129, 0.3);
+				--border-sug: rgba(255, 255, 255, 0.05);
+				--text-response: #f8fafc;
+				--text-footer: rgba(248, 250, 252, 0.4);
+				--text-input: #f8fafc;
+				--text-placeholder: rgba(248, 250, 252, 0.4);
+				--scrollbar-thumb: #334155;
+				--typing-bubble-bg: #1e293b;
+				--typing-border: rgba(16, 185, 129, 0.2);
+				--section-border: rgba(255, 255, 255, 0.1);
+				--welcome-bg: linear-gradient(135deg, #0f172a, #1e293b);
+				--welcome-border: rgba(255, 255, 255, 0.1);
+				--welcome-tag-bg: #334155;
+				--pill-bg: #1e293b;
+				--pill-border: rgba(255, 255, 255, 0.1);
+				--sim-bar-bg: #334155;
+			}
+
+
+			#kisan-launcher {
+				position: fixed;
+				bottom: 28px;
+				right: 28px;
+				z-index: 9999;
+				width: 62px;
+				height: 62px;
+				border-radius: 50%;
+				background: linear-gradient(135deg, #2d6a4f, #52b788);
+				border: none;
+				cursor: pointer;
+				box-shadow: 0 6px 24px rgba(45, 106, 79, 0.45);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 28px;
+				transition:
+					transform 0.2s,
+					box-shadow 0.2s;
+			}
+			#kisan-launcher:hover {
+				transform: scale(1.08);
+				box-shadow: 0 10px 32px rgba(45, 106, 79, 0.55);
+			}
+			#kisan-launcher .badge {
+				position: absolute;
+				top: -4px;
+				right: -4px;
+				width: 18px;
+				height: 18px;
+				border-radius: 50%;
+				background: #4ade80;
+				border: 2px solid #fff;
+				animation: pulse-dot 2s infinite;
+			}
+			@keyframes pulse-dot {
+				0%,
+				100% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0.4;
+				}
+			}
+
+			/* Widget container */
+			#kisan-widget {
+				position: fixed;
+				bottom: 104px;
+				right: 28px;
+				z-index: 9998;
+				width: 400px;
+				height: 620px;
+				border-radius: 20px;
+				box-shadow:
+					0 20px 60px rgba(0, 0, 0, 0.18),
+					0 4px 20px rgba(0, 0, 0, 0.1);
+				display: flex;
+				flex-direction: column;
+				overflow: hidden;
+				font-family: "Noto Sans Devanagari", "DM Sans", sans-serif;
+				transform: scale(0.85) translateY(20px);
+				opacity: 0;
+				pointer-events: none;
+				transition:
+					transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+					opacity 0.25s ease;
+			}
+			#kisan-widget.open {
+				transform: scale(1) translateY(0);
+				opacity: 1;
+				pointer-events: auto;
+			}
+
+			/* Widget header */
+			.w-header {
+				background: linear-gradient(
+					135deg,
+					var(--soil) 0%,
+					var(--bark) 40%,
+					var(--leaf) 100%
+				);
+				padding: 12px 16px;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				position: relative;
+				overflow: hidden;
+				flex-shrink: 0;
+			}
+			.w-header::after {
+				content: "🌿";
+				position: absolute;
+				right: -8px;
+				top: -8px;
+				font-size: 60px;
+				opacity: 0.07;
+				transform: rotate(30deg);
+				pointer-events: none;
+			}
+			.w-header-left {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.w-avatar {
+				width: 38px;
+				height: 38px;
+				background: rgba(255, 255, 255, 0.15);
+				border: 2px solid rgba(255, 255, 255, 0.3);
+				border-radius: 12px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 18px;
+			}
+			.w-title {
+				color: #fff;
+				font-size: 14px;
+				font-weight: 700;
+			}
+			.w-sub {
+				color: rgba(255, 255, 255, 0.65);
+				font-size: 10px;
+				margin-top: 1px;
+			}
+			.w-header-right {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.w-badge {
+				display: flex;
+				align-items: center;
+				gap: 5px;
+				background: rgba(255, 255, 255, 0.12);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				border-radius: 999px;
+				padding: 3px 10px;
+				font-size: 10px;
+				color: rgba(255, 255, 255, 0.85);
+			}
+			.w-status-dot {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: #4ade80;
+				box-shadow: 0 0 5px #4ade80;
+				animation: pulse-dot 2s infinite;
+			}
+			.w-close {
+				background: rgba(255, 255, 255, 0.15);
+				border: none;
+				cursor: pointer;
+				color: #fff;
+				width: 28px;
+				height: 28px;
+				border-radius: 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 16px;
+				transition: background 0.2s;
+			}
+			.w-close:hover {
+				background: rgba(255, 255, 255, 0.28);
+			}
+
+			/* Suggestions bar */
+			.w-suggestions {
+				background: var(--bg-suggestions);
+				border-bottom: 1px solid var(--border-sug);
+				padding: 8px 12px;
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				overflow-x: auto;
+				scrollbar-width: none;
+				flex-shrink: 0;
+				transition: background 0.3s;
+			}
+			.w-suggestions::-webkit-scrollbar {
+				display: none;
+			}
+			.w-sug-label {
+				font-size: 10px;
+				font-weight: 600;
+				color: var(--text-response);
+				white-space: nowrap;
+				opacity: 0.6;
+				text-transform: uppercase;
+			}
+			.w-sug-pill {
+				white-space: nowrap;
+				background: var(--pill-bg);
+				border: 1.5px solid var(--pill-border);
+				color: var(--leaf);
+				font-size: 11px;
+				font-weight: 500;
+				padding: 4px 12px;
+				border-radius: 999px;
+				cursor: pointer;
+				transition: all 0.2s;
+				font-family: inherit;
+				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+			}
+			.w-sug-pill:hover {
+				background: var(--leaf);
+				color: #fff;
+				border-color: var(--leaf);
+				transform: translateY(-1px);
+			}
+
+			/* Chat messages */
+			.w-messages {
+				flex: 1;
+				overflow-y: auto;
+				overscroll-behavior: contain;
+				padding: 14px 12px;
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+				background: var(--bg-widget);
+				scroll-behavior: smooth;
+				transition: background 0.3s;
+			}
+			.w-messages::-webkit-scrollbar {
+				width: 3px;
+			}
+			.w-messages::-webkit-scrollbar-thumb {
+				background: var(--scrollbar-thumb);
+				border-radius: 2px;
+			}
+
+			/* Message rows */
+			.w-msg {
+				display: flex;
+				gap: 8px;
+				animation: wMsgIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+			}
+			.w-msg.user {
+				flex-direction: row-reverse;
+			}
+			@keyframes wMsgIn {
+				from {
+					opacity: 0;
+					transform: translateY(10px) scale(0.97);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0) scale(1);
+				}
+			}
+			.w-bot-avatar {
+				width: 30px;
+				height: 30px;
+				min-width: 30px;
+				background: linear-gradient(135deg, var(--leaf-light), var(--sprout));
+				border-radius: 10px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 15px;
+				box-shadow: 0 2px 6px rgba(45, 106, 79, 0.3);
+			}
+			.w-bot-bubble {
+				background: var(--bg-bubble-bot);
+				border: 1px solid var(--section-border);
+				border-radius: 4px 14px 14px 14px;
+				padding: 10px 12px;
+				max-width: 85%;
+				box-shadow: 0 2px 8px var(--shadow);
+				transition: background 0.3s;
+			}
+			.w-user-bubble {
+				background: linear-gradient(135deg, var(--leaf), var(--leaf-light));
+				color: #fff;
+				border-radius: 14px 4px 14px 14px;
+				padding: 9px 13px;
+				max-width: 78%;
+				font-size: 13px;
+				line-height: 1.5;
+				box-shadow: 0 3px 10px rgba(45, 106, 79, 0.35);
+			}
+
+			/* Chips */
+			.w-chips {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 4px;
+				margin-bottom: 8px;
+			}
+			.w-chip {
+				font-size: 9.5px;
+				font-weight: 600;
+				padding: 2px 8px;
+				border-radius: 999px;
+				letter-spacing: 0.2px;
+			}
+			.wc-crop {
+				background: #d8f3dc;
+				color: #1b4332;
+			}
+			.wc-intent {
+				background: #dbeafe;
+				color: #1e40af;
+			}
+			.wc-llm {
+				background: #ede9fe;
+				color: #5b21b6;
+			}
+			.wc-llmds {
+				background: #fef9c3;
+				color: #854d0e;
+				border: 1px solid #fde047;
+			}
+			.wc-dataset {
+				background: #fef3c7;
+				color: #92400e;
+			}
+			.wc-system {
+				background: #f0fdf4;
+				color: #166534;
+				border: 1px solid #bbf7d0;
+			}
+
+			/* Response text */
+			.w-resp-text {
+				font-size: 12.5px;
+				line-height: 1.8;
+				color: var(--text-response);
+				white-space: pre-wrap;
+			}
+			.w-resp-text.streaming {
+				word-break: break-word;
+			}
+			.w-section-head {
+				display: flex;
+				align-items: center;
+				gap: 5px;
+				font-size: 12px;
+				font-weight: 700;
+				margin-top: 10px;
+				margin-bottom: 4px;
+				padding: 4px 0;
+				border-bottom: 1px solid var(--section-border);
+			}
+			.w-section-head:first-child {
+				margin-top: 0;
+			}
+			.wsh-sabsya {
+				color: #166534;
+			}
+			.wsh-karan {
+				color: #1e40af;
+			}
+			.wsh-samadhan {
+				color: #92400e;
+			}
+			.wsh-savdhan {
+				color: #991b1b;
+			}
+			.wsh-extra {
+				color: #5b21b6;
+			}
+
+			/* Sim bar */
+			.w-sim-bar {
+				height: 2px;
+				border-radius: 999px;
+				background: var(--sim-bar-bg);
+				margin-top: 8px;
+				overflow: hidden;
+			}
+			.w-sim-fill {
+				height: 100%;
+				border-radius: 999px;
+				background: linear-gradient(90deg, var(--sprout), var(--gold));
+				transition: width 0.6s;
+			}
+
+			/* Actions */
+			.w-actions {
+				display: flex;
+				gap: 5px;
+				margin-top: 8px;
+				flex-wrap: wrap;
+			}
+			.w-act-btn {
+				font-size: 10.5px;
+				font-weight: 500;
+				padding: 4px 10px;
+				border-radius: 999px;
+				cursor: pointer;
+				border: none;
+				transition: all 0.2s;
+				font-family: inherit;
+				display: flex;
+				align-items: center;
+				gap: 4px;
+			}
+			.w-act-like {
+				background: var(--sky);
+				color: var(--leaf);
+			}
+			.w-act-like.selected,
+			.w-act-like:hover {
+				background: var(--leaf);
+				color: #fff;
+			}
+			.w-act-dislike {
+				background: #fee2e2;
+				color: #dc2626;
+			}
+			.w-act-dislike.selected,
+			.w-act-dislike:hover {
+				background: #dc2626;
+				color: #fff;
+			}
+
+			/* Typing */
+			.w-typing-bubble {
+				background: var(--typing-bubble-bg);
+				border: 1px solid var(--typing-border);
+				border-radius: 4px 14px 14px 14px;
+				padding: 10px 12px;
+				box-shadow: 0 4px 14px rgba(45, 106, 79, 0.1);
+				width: 220px;
+				display: block;
+				transition: background 0.3s;
+			}
+			.w-typing-header {
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				margin-bottom: 8px;
+			}
+			.w-typing-spinner {
+				width: 14px;
+				height: 14px;
+				min-width: 14px;
+				border: 2px solid rgba(45, 106, 79, 0.2);
+				border-top-color: var(--leaf);
+				border-radius: 50%;
+				animation: tSpin 0.8s linear infinite;
+			}
+			.w-typing-status-text {
+				font-size: 11px;
+				font-weight: 600;
+				color: var(--leaf);
+				line-height: 1.4;
+			}
+			.w-typing-progress {
+				height: 2px;
+				background: rgba(45, 106, 79, 0.12);
+				border-radius: 999px;
+				overflow: hidden;
+				margin-bottom: 8px;
+			}
+			.w-typing-progress-bar {
+				height: 100%;
+				width: 40%;
+				border-radius: 999px;
+				background: linear-gradient(90deg, var(--sprout), var(--gold));
+				animation: tProgress 1.6s ease-in-out infinite alternate;
+			}
+			.w-typing-steps {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+			}
+			.w-typing-step {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 10px;
+				color: rgba(61, 43, 31, 0.3);
+				transition: color 0.3s;
+			}
+			.w-typing-step.active {
+				color: var(--leaf);
+				font-weight: 600;
+			}
+			.w-typing-step.done {
+				color: var(--sprout);
+			}
+			.w-typing-step-dot {
+				width: 5px;
+				height: 5px;
+				min-width: 5px;
+				border-radius: 50%;
+				background: currentColor;
+			}
+			.w-dots {
+				display: none;
+			}
+
+			/* Input area */
+			.w-input-area {
+				background: var(--bg-input-area);
+				border-top: 1px solid var(--border-sug);
+				padding: 10px 12px;
+				padding-bottom: max(10px, env(safe-area-inset-bottom));
+				flex-shrink: 0;
+				transition: background 0.3s;
+			}
+			.w-input-row {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				background: var(--bg-input-row);
+				border: 1.5px solid var(--border-input);
+				border-radius: 14px;
+				padding: 5px 5px 5px 12px;
+				transition:
+					border-color 0.2s,
+					box-shadow 0.2s,
+					background 0.3s;
+			}
+			.w-input-row:focus-within {
+				border-color: var(--leaf-light);
+				box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.12);
+			}
+			#w-input {
+				flex: 1;
+				border: none;
+				outline: none;
+				background: transparent;
+				font-family: inherit;
+				font-size: 13px;
+				color: var(--text-input);
+				padding: 3px 0;
+			}
+			#w-input::placeholder {
+				color: var(--text-placeholder);
+			}
+			#w-mic {
+				width: 32px;
+				height: 32px;
+				border-radius: 9px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 14px;
+				cursor: pointer;
+				border: none;
+				background: rgba(45, 106, 79, 0.08);
+				color: var(--leaf);
+				transition: all 0.2s;
+			}
+			#w-mic:hover {
+				background: rgba(45, 106, 79, 0.15);
+			}
+			#w-mic.listening {
+				background: #fee2e2;
+				color: #dc2626;
+				animation: micPulse 1.2s infinite;
+			}
+			@keyframes micPulse {
+				0%,
+				100% {
+					box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+				}
+				50% {
+					box-shadow: 0 0 0 7px rgba(220, 38, 38, 0);
+				}
+			}
+			#w-send {
+				width: 34px;
+				height: 34px;
+				border-radius: 10px;
+				background: linear-gradient(135deg, var(--leaf), var(--leaf-light));
+				color: #fff;
+				border: none;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.2s;
+				box-shadow: 0 3px 10px rgba(45, 106, 79, 0.35);
+			}
+			#w-send:hover {
+				transform: scale(1.06);
+			}
+			#w-send:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+				transform: none;
+			}
+			#w-send.stopping {
+				background: linear-gradient(135deg, #dc2626, #ef4444);
+				box-shadow: 0 3px 10px rgba(220, 38, 38, 0.4);
+			}
+			.w-footer {
+				text-align: center;
+				font-size: 9.5px;
+				color: var(--text-footer);
+				padding: 4px 0 2px;
+			}
+			#w-mic-status {
+				text-align: center;
+				font-size: 10px;
+				color: #dc2626;
+				font-weight: 500;
+				padding: 3px 0 0;
+			}
+
+			/* Welcome card */
+			.w-welcome {
+				background: var(--welcome-bg);
+				border: 1px solid var(--welcome-border);
+				border-radius: 12px;
+				padding: 16px;
+				text-align: center;
+				transition: background 0.3s;
+			}
+			.w-welcome-emoji {
+				font-size: 32px;
+				margin-bottom: 6px;
+			}
+			.w-welcome-title {
+				font-size: 14px;
+				font-weight: 700;
+				color: var(--leaf);
+				margin-bottom: 5px;
+			}
+			.w-welcome-sub {
+				font-size: 11px;
+				color: var(--text-response);
+				line-height: 1.5;
+				opacity: 0.75;
+			}
+			.w-welcome-tags {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 5px;
+				margin-top: 10px;
+			}
+			.w-welcome-tag {
+				background: var(--welcome-tag-bg);
+				border: 1px solid var(--pill-border);
+				color: var(--leaf);
+				font-size: 10px;
+				font-weight: 600;
+				padding: 3px 9px;
+				border-radius: 999px;
+			}
+
+			/* Cursor blink */
+			@keyframes blink {
+				0%,
+				100% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0;
+				}
+			}
+			.cursor-blink {
+				display: inline-block;
+				color: var(--leaf);
+				font-weight: 700;
+				animation: blink 0.9s step-start infinite;
+				margin-left: 1px;
+			}
+
+			/* ── RESPONSIVE ── */
+
+			/* Small phones */
+			@media (max-width: 480px) {
+				#kisan-widget {
+					width: calc(100vw - 16px);
+					right: 8px;
+					left: 8px;
+					bottom: 86px;
+					height: 78vh;
+					height: 78dvh;
+					border-radius: 16px;
+				}
+				#kisan-launcher {
+					right: 14px;
+					bottom: max(14px, env(safe-area-inset-bottom));
+					width: 54px;
+					height: 54px;
+					font-size: 24px;
+				}
+				.w-header {
+					padding: 10px 13px;
+				}
+				.w-title {
+					font-size: 13px;
+				}
+				.w-sub {
+					font-size: 9px;
+				}
+				.w-avatar {
+					width: 34px;
+					height: 34px;
+					font-size: 16px;
+				}
+				.w-suggestions {
+					padding: 7px 10px;
+					gap: 5px;
+				}
+				.w-sug-pill {
+					font-size: 10px;
+					padding: 3px 10px;
+				}
+				.w-messages {
+					padding: 12px 10px;
+					gap: 10px;
+				}
+				.w-bot-bubble {
+					max-width: 90%;
+					padding: 9px 11px;
+				}
+				.w-user-bubble {
+					max-width: 84%;
+					font-size: 12px;
+					padding: 8px 11px;
+				}
+				.w-resp-text {
+					font-size: 12px;
+				}
+				.w-section-head {
+					font-size: 11px;
+				}
+				.w-typing-bubble {
+					width: 200px;
+					padding: 9px 11px;
+				}
+				.w-input-area {
+					padding: 9px 10px;
+				}
+				#w-input {
+					font-size: 12px;
+				}
+				#w-mic {
+					width: 28px;
+					height: 28px;
+					font-size: 13px;
+				}
+				#w-send {
+					width: 30px;
+					height: 30px;
+				}
+				.w-footer {
+					font-size: 9px;
+				}
+			}
+
+			/* Very small phones */
+			@media (max-width: 360px) {
+				#kisan-widget {
+					width: calc(100vw - 8px);
+					right: 4px;
+					left: 4px;
+					height: 80vh;
+					border-radius: 14px;
+				}
+				.w-badge span {
+					display: none;
+				}
+				.w-badge {
+					padding: 3px 6px;
+				}
+				.w-sug-label {
+					display: none;
+				}
+				.w-bot-bubble {
+					max-width: 94%;
+				}
+				.w-user-bubble {
+					max-width: 90%;
+				}
+			}
+
+			/* Tablets */
+			@media (min-width: 481px) and (max-width: 768px) {
+				#kisan-widget {
+					width: 380px;
+					height: 580px;
+				}
+			}
+
+			/* Landscape phones */
+			@media (max-width: 768px) and (orientation: landscape) {
+				#kisan-widget {
+					height: 85vh;
+					bottom: 76px;
+				}
+				#kisan-launcher {
+					bottom: 12px;
+					right: 12px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<!-- ══════════════════════════════════════════
+     KISAN CHATBOT WIDGET
+══════════════════════════════════════════ -->
+
+		<!-- Launcher button -->
+		<button
+			id="kisan-launcher"
+			title="किसान AI से पूछें"
+			onclick="toggleWidget()"
+		>
+			🌾
+			<div class="badge"></div>
+		</button>
+
+		<!-- Widget panel -->
+		<div id="kisan-widget">
+			<!-- Header -->
+			<div class="w-header">
+				<div class="w-header-left">
+					<div class="w-avatar">🌾</div>
+					<div>
+						<div class="w-title">किसान AI सहायक</div>
+						<!--
+						<div class="w-sub">1500+ समस्याएं हल</div>
+						-->
+					</div>
+				</div>
+				<div class="w-header-right">
+					<div class="w-badge">
+						<div class="w-status-dot"></div>
+						<span>Active</span>
+					</div>
+
+					<button class="w-close" onclick="toggleWidget()" title="बंद करें">
+						✕
+					</button>
+				</div>
+			</div>
+
+			<!-- Suggestions -->
+			<div class="w-suggestions" id="w-suggestions">
+				<span class="w-sug-label">सुझाव:</span>
+				<button class="w-sug-pill" onclick="wUseSuggestion(this)">
+					धान में कीट
+				</button>
+				<button class="w-sug-pill" onclick="wUseSuggestion(this)">
+					टमाटर में रोग
+				</button>
+				<button class="w-sug-pill" onclick="wUseSuggestion(this)">
+					गेहूँ कैसे उगाएं
+				</button>
+				<button class="w-sug-pill" onclick="wUseSuggestion(this)">
+					आलू में खाद
+				</button>
+			</div>
+
+			<!-- Messages -->
+			<div class="w-messages" id="w-messages">
+				<div class="w-welcome">
+					<div class="w-welcome-emoji">🌱</div>
+					<div class="w-welcome-title">नमस्ते किसान भाई! 🙏</div>
+					<div class="w-welcome-sub">
+						फसल की कोई भी समस्या बताएं —<br />
+						<strong>हिंदी, Hinglish या English</strong> में।
+					</div>
+					<div class="w-welcome-tags">
+						<span class="w-welcome-tag">🐛 कीट</span>
+						<span class="w-welcome-tag">🍃 रोग</span>
+						<span class="w-welcome-tag">💧 सिंचाई</span>
+						<span class="w-welcome-tag">🌿 खाद</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Input -->
+			<div class="w-input-area">
+				<div class="w-input-row">
+					<button id="w-mic" title="आवाज़ से पूछें">🎤</button>
+					<input
+						id="w-input"
+						type="text"
+						placeholder="फसल की समस्या लिखें..."
+						autocomplete="off"
+					/>
+					<button id="w-send" title="भेजें">
+						<svg
+							id="w-send-icon"
+							width="15"
+							height="15"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<line x1="22" y1="2" x2="11" y2="13"></line>
+							<polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+						</svg>
+						<svg
+							id="w-stop-icon"
+							style="display: none"
+							width="13"
+							height="13"
+							viewBox="0 0 24 24"
+							fill="currentColor"
+						>
+							<rect x="4" y="4" width="16" height="16" rx="2" />
+						</svg>
+					</button>
+				</div>
+				<div id="w-mic-status" style="display: none">🎤 सुन रहा हूँ...</div>
+				<div class="w-footer">Kisan Helpline: 1800-180-1551</div>
+			</div>
+		</div>
+
+		<script>
+			/* ══════════════════════════════════════════════════════
+   KISAN WIDGET JS — Full chatbot logic scoped to widget
+══════════════════════════════════════════════════════ */
+
+			// ── Theme toggle (shared with index.html via localStorage) ─────────────
+			const wThemeBtn = document.getElementById("w-theme-btn");
+
+			function wApplyTheme(dark) {
+				if (dark) {
+					document.documentElement.classList.add("dark");
+					if (wThemeBtn) {
+						wThemeBtn.textContent = "☀️";
+						wThemeBtn.title = "लाइट थीम";
+					}
+				} else {
+					document.documentElement.classList.remove("dark");
+					if (wThemeBtn) {
+						wThemeBtn.textContent = "🌙";
+						wThemeBtn.title = "डार्क थीम";
+					}
+				}
+			}
+
+			function wToggleTheme() {
+				const isDark = document.documentElement.classList.contains("dark");
+				localStorage.setItem("kisan-theme", isDark ? "light" : "dark");
+				wApplyTheme(!isDark);
+			}
+
+			// Apply saved preference on load
+			wApplyTheme(localStorage.getItem("kisan-theme") === "dark");
+
+			// ── Widget open/close ──────────────────────────────────
+			function toggleWidget() {
+				const w = document.getElementById("kisan-widget");
+				const isOpen = w.classList.toggle("open");
+				if (isOpen) {
+					document.getElementById("w-input").focus();
+				}
+			}
+
+			// Close when clicking outside
+			document.addEventListener("click", (e) => {
+				const w = document.getElementById("kisan-widget");
+				const launcher = document.getElementById("kisan-launcher");
+				if (w && launcher) {
+					if (w.classList.contains("open") && !w.contains(e.target) && !launcher.contains(e.target)) {
+						w.classList.remove("open");
+					}
+				}
+			});
+
+			// ── DOM refs ───────────────────────────────────────────
+			const wChat = document.getElementById("w-messages");
+			const wInput = document.getElementById("w-input");
+			const wSend = document.getElementById("w-send");
+			const wSendIco = document.getElementById("w-send-icon");
+			const wStopIco = document.getElementById("w-stop-icon");
+			const wMic = document.getElementById("w-mic");
+			const wMicSt = document.getElementById("w-mic-status");
+			const wSugBar = document.getElementById("w-suggestions");
+
+			let wAbort = null;
+
+			function wSetStopping(on) {
+				if (on) {
+					wSend.disabled = false;
+					wSend.classList.add("stopping");
+					wSend.title = "रोकें";
+					wSendIco.style.display = "none";
+					wStopIco.style.display = "";
+				} else {
+					wSend.classList.remove("stopping");
+					wSend.title = "भेजें";
+					wSendIco.style.display = "";
+					wStopIco.style.display = "none";
+				}
+			}
+
+			// ── Escape HTML ────────────────────────────────────────
+			function wEsc(s) {
+				return String(s)
+					.replace(/&/g, "&")
+					.replace(/</g, "<")
+					.replace(/>/g, ">")
+					.replace(/"/g, '"');
+			}
+
+			function wScrollBottom() {
+				wChat.scrollTo({ top: wChat.scrollHeight, behavior: "smooth" });
+			}
+
+			// ── Suggestions ────────────────────────────────────────
+			function wUseSuggestion(btn) {
+				wInput.value = btn.textContent.trim();
+				wInput.focus();
+				wSendMessage();
+			}
+
+			function wUpdateSuggestions(pills) {
+				wSugBar.querySelectorAll(".w-sug-pill").forEach((p) => p.remove());
+				(pills || []).forEach((text) => {
+					const btn = document.createElement("button");
+					btn.className = "w-sug-pill";
+					btn.textContent = text;
+					btn.onclick = () => wUseSuggestion(btn);
+					wSugBar.appendChild(btn);
+				});
+			}
+
+			// ── Append user bubble ─────────────────────────────────
+			function wAppendUser(text) {
+				const row = document.createElement("div");
+				row.className = "w-msg user";
+				row.innerHTML = `<div class="w-user-bubble">${wEsc(text)}</div>`;
+				wChat.appendChild(row);
+				wScrollBottom();
+			}
+
+			// ── Typing indicator ───────────────────────────────────
+			function wShowTyping() {
+				const row = document.createElement("div");
+				row.id = "w-typing";
+				row.className = "w-msg";
+				row.innerHTML = `
+    <div class="w-bot-avatar">🤖</div>
+    <div class="w-typing-bubble">
+      <div class="w-typing-header">
+        <div class="w-typing-spinner"></div>
+        <span class="w-typing-status-text" id="w-typing-status">🌾 फसल की जानकारी खोज रहे हैं...</span>
+      </div>
+      <div class="w-typing-progress"><div class="w-typing-progress-bar"></div></div>
+      <div class="w-typing-steps">
+        <div class="w-typing-step active" id="wtstep-0"><div class="w-typing-step-dot"></div><span>डेटाबेस में खोज रहे हैं</span></div>
+        <div class="w-typing-step"        id="wtstep-1"><div class="w-typing-step-dot"></div><span>मिलान विश्लेषण</span></div>
+        <div class="w-typing-step"        id="wtstep-2"><div class="w-typing-step-dot"></div><span>विशेषज्ञ सलाह तैयार</span></div>
+        <div class="w-typing-step"        id="wtstep-3"><div class="w-typing-step-dot"></div><span>उत्तर लिख रहे हैं</span></div>
+      </div>
+    </div>`;
+				wChat.appendChild(row);
+				wScrollBottom();
+				const _wMsgs = [
+					"🌾 फसल की जानकारी खोज रहे हैं...",
+					"🔍 डेटाबेस में मिलान ढूंढ रहे हैं...",
+					"🤖 विशेषज्ञ सलाह तैयार हो रही है...",
+					"✍️ उत्तर लिख रहे हैं...",
+				];
+				let _wmi = 0;
+				window._wTypingInterval = setInterval(() => {
+					_wmi = Math.min(_wmi + 1, _wMsgs.length - 1);
+					const statusEl = document.getElementById("w-typing-status");
+					if (statusEl) statusEl.textContent = _wMsgs[_wmi];
+					for (let i = 0; i < 4; i++) {
+						const s = document.getElementById("wtstep-" + i);
+						if (!s) continue;
+						if (i < _wmi) s.className = "w-typing-step done";
+						else if (i === _wmi) s.className = "w-typing-step active";
+						else s.className = "w-typing-step";
+					}
+				}, 2200);
+			}
+			function wRemoveTyping() {
+				document.getElementById("w-typing")?.remove();
+				clearInterval(window._wTypingInterval);
+			}
+
+			// ── Format response ────────────────────────────────────
+			function wLinkify(html) {
+				html = html.replace(
+					/(\b1[89]00[-\s]?\d{3}[-\s]?\d{4}\b)/g,
+					'<a href="tel:$1" style="color:var(--leaf);font-weight:600;text-decoration:underline;">$1</a>',
+				);
+				html = html.replace(
+					/(https?:\/\/[^\s<>"]+|www\.[^\s<>"]+)/g,
+					'<a href="$1" target="_blank" rel="noopener" style="color:var(--leaf);font-weight:600;text-decoration:underline;">$1</a>',
+				);
+				return html;
+			}
+
+			function wFormatResponse(raw) {
+				const lines = raw.split("\n");
+				let out = "";
+				const headMap = {
+					"🌱 समस्या:": ["wsh-sabsya", "🌱 समस्या"],
+					"🔍 कारण:": ["wsh-karan", "🔍 कारण"],
+					"🛠 समाधान:": ["wsh-samadhan", "🛠 समाधान"],
+					"⚠ सावधानियां:": ["wsh-savdhan", "⚠ सावधानियां"],
+					"💡 अतिरिक्त सलाह:": ["wsh-extra", "💡 अतिरिक्त सलाह"],
+					"🌾 फसल जानकारी:": ["wsh-sabsya", "🌾 फसल जानकारी"],
+					"🗓 बुवाई का समय:": ["wsh-karan", "🗓 बुवाई का समय"],
+					"🌱 बीज और खेत तैयारी:": ["wsh-samadhan", "🌱 बीज और खेत तैयारी"],
+					"💧 सिंचाई:": ["wsh-karan", "💧 सिंचाई"],
+					"🌿 खाद और उर्वरक:": ["wsh-samadhan", "🌿 खाद और उर्वरक"],
+					"🛡 रोग और कीट से बचाव:": ["wsh-savdhan", "🛡 रोग और कीट से बचाव"],
+					"🌾 कटाई:": ["wsh-extra", "🌾 कटाई"],
+				};
+				for (const line of lines) {
+					const t = line.trim();
+					let matched = false;
+					for (const [key, [cls, label]] of Object.entries(headMap)) {
+						if (t.startsWith(key) || t === key.replace(":", "")) {
+							out += `<div class="w-section-head ${cls}"><button class="w-inline-speak-btn" onclick="wSpeakSection(this)" title="यह हिस्सा सुनें" style="background:transparent;border:none;cursor:pointer;font-size:1.1em;margin-right:6px;">🔊</button>${label}</div>`;
+							const rest = t.slice(key.length).trim();
+							if (rest) out += `<span>${wLinkify(wEsc(rest))}\n</span>`;
+							matched = true;
+							break;
+						}
+					}
+					if (!matched) {
+						if (t.startsWith("•") || t.startsWith("-") || t.match(/^\d+\./)) {
+							out += `<span style="display:block;padding-left:4px;">${wLinkify(wEsc(t))}\n</span>`;
+						} else {
+							out += wLinkify(wEsc(t)) + "\n";
+						}
+					}
+				}
+				return out;
+			}
+
+			// ── Create bot bubble ──────────────────────────────────
+			function wCreateBubble(meta) {
+				const row = document.createElement("div");
+				row.className = "w-msg";
+				const rid = "wr_" + Date.now();
+
+				const cropChip = meta.crop
+					? `<span class="w-chip wc-crop">🌱 ${wEsc(meta.crop)}</span>`
+					: "";
+				const intentChip = meta.intent
+					? `<span class="w-chip wc-intent">🔍 ${wEsc(meta.intent)}</span>`
+					: "";
+				const srcChip =
+					meta.source === "llm"
+						? `<span class="w-chip wc-llm">🔴 LLM Only</span>`
+						: meta.source === "llm+dataset"
+							? `<span class="w-chip wc-llmds">🟡 LLM + Dataset</span>`
+							: meta.source === "system"
+								? `<span class="w-chip wc-system">🤖 Assistant</span>`
+								: `<span class="w-chip wc-dataset">🟢 Dataset Direct</span>`;
+
+				row.innerHTML = `
+    <div class="w-bot-avatar">🤖</div>
+    <div class="w-bot-bubble">
+
+      <div class="w-resp-text streaming" id="${rid}"></div>
+      <div class="w-actions" id="wact_${rid}" style="display:none;">
+        <button class="w-act-btn w-act-like" onclick="wRateResponse(this, 'up')" title="उपयोगी">👍</button>
+        <button class="w-act-btn w-act-dislike" onclick="wRateResponse(this, 'down')" title="अनुपयोगी">👎</button>
+      </div>
+    </div>`;
+				wChat.appendChild(row);
+				wScrollBottom();
+				return rid;
+			}
+
+			// ── Finalize bubble ────────────────────────────────────
+			function wFinalize(rid, fullText, meta) {
+				const el = document.getElementById(rid);
+				if (el) {
+					el.classList.remove("streaming");
+					el.innerHTML = wFormatResponse(fullText);
+				}
+				const actEl = document.getElementById("wact_" + rid);
+				if (actEl) actEl.style.display = "";
+				wScrollBottom();
+			}
+
+			// ── Main send function ─────────────────────────────────
+			async function wSendMessage() {
+				const msg = wInput.value.trim();
+				if (!msg) return;
+
+				if (wSend.classList.contains("stopping")) {
+					if (wAbort) wAbort.abort();
+					return;
+				}
+
+				wAppendUser(msg);
+				wInput.value = "";
+				wSetStopping(true);
+				wShowTyping();
+
+				let rid = null;
+				let fullText = "";
+				let metaInfo = {};
+				wAbort = new AbortController();
+
+				try {
+					const res = await fetch("/chat/stream", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ message: msg }),
+						signal: wAbort.signal,
+					});
+					if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+					const reader = res.body.getReader();
+					const decoder = new TextDecoder("utf-8");
+					let buffer = "";
+
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						buffer += decoder.decode(value, { stream: true });
+						const lines = buffer.split("\n");
+						buffer = lines.pop();
+
+						for (const line of lines) {
+							if (!line.startsWith("data: ")) continue;
+							const jsonStr = line.slice(6).trim();
+							if (!jsonStr) continue;
+							let evt;
+							try {
+								evt = JSON.parse(jsonStr);
+							} catch {
+								continue;
+							}
+
+							if (evt.type === "meta") {
+								wRemoveTyping();
+								metaInfo = {
+									crop: evt.crop,
+									intent: evt.intent,
+									source: evt.source || "llm",
+									top_similarity: evt.top_similarity || 0,
+								};
+								rid = wCreateBubble(metaInfo);
+								if (evt.suggestions?.length)
+									wUpdateSuggestions(evt.suggestions);
+							} else if (evt.type === "token") {
+								fullText += evt.text;
+								if (rid) {
+									const el = document.getElementById(rid);
+									if (el) {
+										el.innerHTML =
+											wFormatResponse(fullText) +
+											'<span class="cursor-blink">▌</span>';
+										wScrollBottom();
+									}
+								}
+							} else if (evt.type === "done") {
+								if (evt.source) metaInfo.source = evt.source;
+								if (rid) wFinalize(rid, fullText, metaInfo);
+							}
+						}
+					}
+
+					if (buffer.startsWith("data: ")) {
+						try {
+							const evt = JSON.parse(buffer.slice(6).trim());
+							if (evt.type === "done" && rid)
+								wFinalize(rid, fullText, metaInfo);
+						} catch {}
+					}
+				} catch (err) {
+					wRemoveTyping();
+					if (err.name === "AbortError") {
+						if (rid && fullText) wFinalize(rid, fullText, metaInfo);
+					} else {
+						console.error("Widget stream error:", err);
+						try {
+							const res = await fetch("/chat", {
+								method: "POST",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({ message: msg }),
+							});
+							const data = await res.json();
+							const fb = wCreateBubble({
+								crop: data.crop,
+								intent: data.intent,
+								source: data.source,
+							});
+							wFinalize(fb, data.response, {
+								top_similarity: data.top_similarity,
+								source: data.source,
+							});
+							if (data.suggestions?.length)
+								wUpdateSuggestions(data.suggestions);
+						} catch {
+							const eid = wCreateBubble({ source: "dataset" });
+							wFinalize(
+								eid,
+								"❌ सर्वर से कनेक्ट नहीं हो सका। कृपया दोबारा कोशिश करें।",
+								{},
+							);
+						}
+					}
+				} finally {
+					wSetStopping(false);
+					wAbort = null;
+					wInput.focus();
+				}
+			}
+
+			wSend.addEventListener("click", wSendMessage);
+			wInput.addEventListener("keydown", (e) => {
+				if (e.key === "Enter" && !e.shiftKey) {
+					e.preventDefault();
+					wSendMessage();
+				}
+			});
+
+			// ── Voice input ────────────────────────────────────────
+			let wListening = false;
+			const WSpeechRec =
+				window.SpeechRecognition || window.webkitSpeechRecognition;
+			if (WSpeechRec) {
+				const wrec = new WSpeechRec();
+				wrec.lang = "hi-IN";
+				wrec.interimResults = false;
+				wrec.maxAlternatives = 1;
+				wrec.onstart = () => {
+					wListening = true;
+					wMic.classList.add("listening");
+					wMic.textContent = "⏹";
+					wMicSt.style.display = "block";
+				};
+				wrec.onend = () => {
+					wListening = false;
+					wMic.classList.remove("listening");
+					wMic.textContent = "🎤";
+					wMicSt.style.display = "none";
+				};
+				wrec.onresult = (e) => {
+					wInput.value = e.results[0][0].transcript;
+					setTimeout(wSendMessage, 400);
+				};
+				wrec.onerror = () => wrec.onend();
+				wMic.addEventListener("click", () => {
+					if (wListening) {
+						wrec.stop();
+						return;
+					}
+					try {
+						wrec.start();
+					} catch (e) {}
+				});
+			} else {
+				wMic.style.opacity = "0.35";
+				wMic.style.cursor = "not-allowed";
+				wMic.title = "Voice not supported";
+			}
+
+			// ── Voice output ───────────────────────────────────────
+			let _voices = [];
+			function _wLoadVoices() {
+				_wVoices = speechSynthesis.getVoices();
+			}
+			_wLoadVoices();
+			speechSynthesis.onvoiceschanged = _wLoadVoices;
+
+			let _wKeepAlive = null;
+			let _wSpeaking = false;
+
+			function wCleanForSpeech(text) {
+				return text
+					.replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+					.replace(/[\u{2600}-\u{27BF}]/gu, "")
+					.replace(/[\u{FE00}-\u{FEFF}]/gu, "")
+					.replace(/[🌱🔍🛠⚠💡🌾🗓💧🌿🛡🎙✅❌]/g, "")
+					.replace(/[•\-\*#>\|—]/g, ", ")
+					.replace(/\n{1,}/g, ", ")
+					.replace(/[ \t]{2,}/g, " ")
+					.replace(/,{2,}/g, ",")
+					.trim();
+			}
+
+			const _wSectionLabels = {
+				समस्या: "समस्या, ",
+				कारण: "कारण, ",
+				समाधान: "समाधान, ",
+				सावधानियां: "सावधानियां, ",
+				"अतिरिक्त सलाह": "अतिरिक्त सलाह, ",
+				"फसल जानकारी": "फसल जानकारी, ",
+				"बुवाई का समय": "बुवाई का समय, ",
+				"बीज और खेत तैयारी": "बीज और खेत तैयारी, ",
+				सिंचाई: "सिंचाई, ",
+				"खाद और उर्वरक": "खाद और उर्वरक, ",
+				"रोग और कीट से बचाव": "रोग और कीट से बचाव, ",
+				कटाई: "कटाई, ",
+			};
+
+			function wBuildChunks(el) {
+				const chunks = [];
+				let fullText = "";
+				let isReading = false;
+				let hasSections = false;
+				
+				el.childNodes.forEach(n => {
+					if (n.nodeType === Node.ELEMENT_NODE && (n.className || "").includes("w-section-head")) {
+						hasSections = true;
+					}
+				});
+
+				el.childNodes.forEach((node) => {
+					if (node.nodeType === Node.ELEMENT_NODE) {
+						const cls = node.className || "";
+						const raw = (node.innerText || node.textContent).trim();
+						if (!raw) return;
+						if (cls.includes("w-section-head") || cls.includes("section-head")) {
+							if (raw.includes("समाधान") || raw.includes("जानकारी") || raw.includes("मुख्य बिंदु")) {
+								isReading = true;
+								let label = raw;
+								for (const [key, val] of Object.entries(_wSectionLabels)) {
+									if (raw.includes(key)) {
+										label = val;
+										break;
+									}
+								}
+								fullText += label + " ";
+							} else {
+								isReading = false;
+							}
+							return;
+						}
+					}
+
+					if (!hasSections || isReading) {
+						if (node.nodeType === Node.TEXT_NODE) {
+							fullText += node.textContent + " ";
+						} else if (node.nodeType === Node.ELEMENT_NODE) {
+							fullText += (node.innerText || node.textContent) + " ";
+						}
+					}
+				});
+
+				fullText = wCleanForSpeech(fullText);
+				
+				return [{ text: "सुनिए, " + fullText, pause: 0 }];
+			}
+
+			function wSpeak(rid, btn) {
+				const el = document.getElementById(rid);
+				if (!el) return;
+
+				speechSynthesis.cancel();
+				clearInterval(_wKeepAlive);
+
+				const chunks = wBuildChunks(el);
+				if (!chunks.length) return;
+
+				if (btn) btn.textContent = "⏸ चल रहा...";
+
+				function _wGetVoice() {
+					const voices = speechSynthesis.getVoices();
+					return (
+						voices.find((v) => v.lang.startsWith("hi")) ||
+						voices.find((v) => v.lang.startsWith("en-IN")) ||
+						voices.find((v) => v.lang.startsWith("en")) ||
+						voices[0]
+					);
+				}
+
+				let idx = 0;
+				function speakNext() {
+					if (idx >= chunks.length) {
+						if (btn) btn.textContent = "🔊 सुनें";
+						clearInterval(_wKeepAlive);
+						return;
+					}
+					const chunk = chunks[idx++];
+					setTimeout(() => {
+						const utt = new SpeechSynthesisUtterance(chunk.text);
+						utt.lang = "hi-IN";
+						utt.rate = 0.88;
+						utt.pitch = 1;
+						const hv = _wGetVoice();
+						if (hv) utt.voice = hv;
+						utt.onend = speakNext;
+						utt.onerror = speakNext;
+						speechSynthesis.speak(utt);
+					}, chunk.pause);
+				}
+
+				function _doSpeak() {
+					speakNext();
+					_wKeepAlive = setInterval(() => {
+						if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+							clearInterval(_wKeepAlive);
+						} else {
+							speechSynthesis.resume();
+						}
+					}, 5000);
+				}
+
+				if (speechSynthesis.getVoices().length > 0) {
+					_doSpeak();
+				} else {
+					speechSynthesis.onvoiceschanged = () => {
+						_wLoadVoices();
+						_doSpeak();
+					};
+				}
+			}
+
+			function wSpeakSection(btn) {
+				const head = btn.closest(".w-section-head");
+				if (!head) return;
+				
+				if (btn.textContent === "⏸") {
+					wStopSpeech();
+					return;
+				}
+				
+				wStopSpeech(); // Stop everything first
+				
+				let fullText = "";
+				// Get label text excluding the button
+				const rawHead = head.innerText.replace("🔊", "").replace("⏸", "").trim();
+				let label = rawHead;
+				for (const [key, val] of Object.entries(_wSectionLabels)) {
+					if (rawHead.includes(key)) {
+						label = val;
+						break;
+					}
+				}
+				fullText += label + " ";
+				
+				let curr = head.nextSibling;
+				while (curr) {
+					if (curr.nodeType === Node.ELEMENT_NODE) {
+						const cls = curr.className || "";
+						if (cls.includes("w-section-head") || cls.includes("section-head")) {
+							break; // Hit next section
+						}
+						fullText += (curr.innerText || curr.textContent) + " ";
+					} else if (curr.nodeType === Node.TEXT_NODE) {
+						fullText += curr.textContent + " ";
+					}
+					curr = curr.nextSibling;
+				}
+				
+				fullText = wCleanForSpeech(fullText);
+				
+				const utt = new SpeechSynthesisUtterance("सुनिए, " + fullText);
+				utt.lang = "hi-IN";
+				utt.rate = 0.88;
+				utt.pitch = 1;
+				
+				const voices = speechSynthesis.getVoices();
+				const hv = voices.find((v) => v.lang.startsWith("hi")) ||
+						   voices.find((v) => v.lang.startsWith("en-IN")) ||
+						   voices[0];
+				if (hv) utt.voice = hv;
+				
+				btn.textContent = "⏸";
+				
+				utt.onend = () => { btn.textContent = "🔊"; clearInterval(_wKeepAlive); };
+				utt.onerror = () => { btn.textContent = "🔊"; clearInterval(_wKeepAlive); };
+				
+				speechSynthesis.speak(utt);
+				
+				_wKeepAlive = setInterval(() => {
+					if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+						clearInterval(_wKeepAlive);
+					} else {
+						speechSynthesis.resume();
+					}
+				}, 5000);
+			}
+
+			function wRateResponse(btn, type) {
+				const parent = btn.parentElement;
+				parent.querySelectorAll('.w-act-btn').forEach(b => b.classList.remove('selected'));
+				btn.classList.add('selected');
+			}
+
+			function wStopSpeech() {
+				speechSynthesis.cancel();
+				clearInterval(_wKeepAlive);
+				document
+					.querySelectorAll(".w-inline-speak-btn")
+					.forEach((b) => (b.textContent = "🔊"));
+			}
+		</script>

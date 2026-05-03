@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="hi" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisan AI - System of Agri-information Resources</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        saffron: '#FF9933',
+                        indiaGreen: '#138808',
+                        navyBlue: '#000080',
+                        govBlue: '#0f4c81',
+                        govLight: '#f3f4f6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .carousel-transition {
+            transition: transform 0.7s ease-in-out;
+        }
+        .text-shadow-md {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+        /* Language Toggle Logic */
+        html[lang="en"] .lang-hi { display: none !important; }
+        html[lang="hi"] .lang-en { display: none !important; }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800 bg-gray-50 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
+
+    <!-- Top Utility Bar (Government Style) -->
+    <div class="bg-govBlue dark:bg-slate-950 text-white text-xs py-1.5 border-b-4 border-saffron dark:border-emerald-600 transition-colors duration-300">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <span><i class="fa-solid fa-building-columns mr-1"></i> <span class="lang-en hidden sm:inline">Government of India</span><span class="lang-hi hidden sm:inline">भारत सरकार</span><span class="sm:hidden">Govt. of India</span></span>
+            </div>
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="#main-content" class="hover:text-saffron transition">
+                        <span class="lang-en">Skip to Main Content</span>
+                        <span class="lang-hi">मुख्य सामग्री पर जाएं</span>
+                    </a>
+                    <span class="border-l border-white/30 h-3"></span>
+                    <span><i class="fa-solid fa-phone mr-1"></i> 1800-180-1551</span>
+                    <span class="border-l border-white/30 h-3"></span>
+                    <div class="flex space-x-1">
+                        <button onclick="changeFontSize(-1)" class="bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded text-[10px] focus:outline-none transition">A-</button>
+                        <button onclick="changeFontSize(0)" class="bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded text-[10px] focus:outline-none transition">A</button>
+                        <button onclick="changeFontSize(1)" class="bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded text-[10px] focus:outline-none transition">A+</button>
+                    </div>
+                    <span class="border-l border-white/30 h-3"></span>
+                </div>
+                
+                <!-- Global Theme Toggle -->
+                <button onclick="toggleGlobalTheme()" id="global-theme-btn" class="hover:text-saffron transition text-sm" title="Toggle Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                
+                <span class="border-l border-white/30 h-3"></span>
+                <select id="lang-select" onchange="toggleLanguage()" class="bg-transparent border-none text-white text-xs outline-none cursor-pointer p-0">
+                    <option class="text-black" value="hi">हिन्दी</option>
+                    <option class="text-black" value="en">English</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-50 transition-colors duration-300 border-b border-transparent dark:border-slate-800">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- Left Branding -->
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-16 flex items-center justify-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" alt="Emblem of India" class="h-14 block dark:hidden">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" alt="Emblem of India (White)" class="h-14 hidden dark:block" style="filter: brightness(0) invert(1);">
+                </div>
+                <div class="border-l-2 border-gray-200 dark:border-slate-700 pl-3">
+                    <h1 class="text-2xl font-bold text-govBlue dark:text-emerald-400 leading-tight tracking-tight">
+                        <span class="lang-en">Kisan</span><span class="lang-hi">किसान</span> <span class="text-indiaGreen dark:text-emerald-300">AI</span>
+                    </h1>
+                    <p class="text-xs text-gray-500 dark:text-slate-400 font-medium">
+                        <span class="lang-en">Surya PM-KUSUM / System of Agri-information</span>
+                        <span class="lang-hi">सूर्य पीएम-कुसुम / कृषि-सूचना प्रणाली</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right Branding / Logos -->
+            <div class="hidden lg:flex items-center space-x-6">
+                <div class="text-right">
+                    <p class="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                        <span class="lang-en">Ministry of Agriculture & Farmers Welfare</span>
+                        <span class="lang-hi">कृषि एवं किसान कल्याण मंत्रालय</span>
+                    </p>
+                    <p class="text-xs text-gray-400 dark:text-slate-500">
+                        <span class="lang-en">Government of India</span>
+                        <span class="lang-hi">भारत सरकार</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()" class="lg:hidden text-2xl text-govBlue dark:text-emerald-400 p-2 focus:outline-none">
+                <i id="mobile-menu-icon" class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Desktop Navigation Bar -->
+        <nav class="bg-indiaGreen dark:bg-slate-800 text-white hidden lg:block border-b-4 border-saffron dark:border-emerald-600 transition-colors duration-300">
+            <div class="container mx-auto px-4">
+                <ul class="flex items-center space-x-1">
+                    <li><a href="#" class="inline-block px-5 py-3 hover:bg-white/10 hover:text-saffron dark:hover:text-emerald-300 transition font-medium"><i class="fa-solid fa-house mr-2"></i><span class="lang-en">Home</span><span class="lang-hi">होम</span></a></li>
+                    <li><a href="#about" class="inline-block px-5 py-3 hover:bg-white/10 hover:text-saffron dark:hover:text-emerald-300 transition font-medium"><span class="lang-en">About Kisan AI</span><span class="lang-hi">किसान AI के बारे में</span></a></li>
+                    <li><a href="#" class="inline-block px-5 py-3 hover:bg-white/10 hover:text-saffron dark:hover:text-emerald-300 transition font-medium"><span class="lang-en">My Scheme</span><span class="lang-hi">मेरी योजना</span></a></li>
+                    <li><a href="#" class="inline-block px-5 py-3 hover:bg-white/10 hover:text-saffron dark:hover:text-emerald-300 transition font-medium"><span class="lang-en">Services</span><span class="lang-hi">सेवाएं</span></a></li>
+                    
+                    <li class="relative group">
+                        <a href="#" class="inline-block px-5 py-3 hover:bg-white/10 hover:text-saffron dark:hover:text-emerald-300 transition font-medium">
+                            <span class="lang-en">Download Brochure</span><span class="lang-hi">ब्रोशर डाउनलोड करें</span> <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+                        </a>
+                        <ul class="absolute hidden group-hover:block bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-100 shadow-xl rounded-b min-w-[150px] border border-gray-100 dark:border-slate-700 z-50">
+                            <li><a href="#" class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-indiaGreen dark:hover:text-emerald-400 border-b dark:border-slate-700"><span class="lang-en">Hindi PDF</span><span class="lang-hi">हिंदी पीडीएफ</span></a></li>
+                            <li><a href="#" class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-indiaGreen dark:hover:text-emerald-400"><span class="lang-en">English PDF</span><span class="lang-hi">अंग्रेजी पीडीएफ</span></a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#" class="inline-block px-5 py-3 hover:bg-white/10 hover:text-saffron dark:hover:text-emerald-300 transition font-medium"><span class="lang-en">Contact</span><span class="lang-hi">संपर्क</span></a></li>
+                    <li class="ml-auto">
+                        <a href="#" class="inline-block bg-saffron dark:bg-emerald-600 text-white px-6 py-3 font-semibold hover:bg-orange-500 dark:hover:bg-emerald-500 transition">
+                            <i class="fa-solid fa-user-circle mr-2"></i> <span class="lang-en">Farmer Login</span><span class="lang-hi">किसान लॉगिन</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation Menu (Hidden by default) -->
+        <nav id="mobile-menu" class="hidden lg:hidden bg-indiaGreen dark:bg-slate-800 text-white border-b-4 border-saffron dark:border-emerald-600 transition-colors duration-300">
+            <div class="px-4 py-2 flex flex-col space-y-2">
+                <a href="#" class="block px-4 py-2 rounded hover:bg-white/10"><i class="fa-solid fa-house mr-2"></i><span class="lang-en">Home</span><span class="lang-hi">होम</span></a>
+                <a href="#about" class="block px-4 py-2 rounded hover:bg-white/10"><span class="lang-en">About Kisan AI</span><span class="lang-hi">किसान AI के बारे में</span></a>
+                <a href="#" class="block px-4 py-2 rounded hover:bg-white/10"><span class="lang-en">My Scheme</span><span class="lang-hi">मेरी योजना</span></a>
+                <a href="#" class="block px-4 py-2 rounded hover:bg-white/10"><span class="lang-en">Services</span><span class="lang-hi">सेवाएं</span></a>
+                <a href="#" class="block px-4 py-2 rounded hover:bg-white/10"><span class="lang-en">Download Brochure</span><span class="lang-hi">ब्रोशर डाउनलोड करें</span></a>
+                <a href="#" class="block px-4 py-2 rounded hover:bg-white/10"><span class="lang-en">Contact</span><span class="lang-hi">संपर्क</span></a>
+                <a href="#" class="block px-4 py-2 rounded bg-saffron dark:bg-emerald-600 text-center font-bold mt-2"><i class="fa-solid fa-user-circle mr-2"></i><span class="lang-en">Farmer Login</span><span class="lang-hi">किसान लॉगिन</span></a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        
+        <!-- Hero Carousel Section -->
+        <section class="relative w-full h-[500px] overflow-hidden bg-gray-900 dark:bg-slate-950 group transition-colors duration-300">
+            
+            <div id="carousel" class="flex h-full w-[300%] carousel-transition relative">
+                
+                <!-- Slide 1 -->
+                <div class="w-1/3 h-full relative">
+                    <img src="/static/images/slide1.png" alt="Indian Farming with AI" class="w-full h-full object-cover opacity-60">
+                    <div class="absolute inset-0 bg-gradient-to-r from-govBlue/80 dark:from-slate-950/90 to-transparent"></div>
+                    <div class="absolute inset-0 flex flex-col justify-center px-4 sm:px-10 md:px-20 max-w-4xl">
+                        <span class="inline-block bg-saffron dark:bg-emerald-600 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wider mb-4 w-max">
+                            <span class="lang-en">Artificial Intelligence</span><span class="lang-hi">कृत्रिम बुद्धिमत्ता (AI)</span>
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 text-shadow-md leading-tight">
+                            <span class="lang-en">Empowering Farmers with <br>AI-driven Insights</span>
+                            <span class="lang-hi">AI-संचालित समाधानों से <br>किसानों को सशक्त बनाना</span>
+                        </h2>
+                        <p class="text-lg text-gray-100 dark:text-slate-300 mb-8 max-w-2xl text-shadow-md">
+                            <span class="lang-en">Providing seamless, multimedia connectivity to farmers with the latest agricultural technologies and knowledge base directly in Hindi.</span>
+                            <span class="lang-hi">किसानों को नवीनतम कृषि तकनीकों और ज्ञान से हिंदी में सीधे जोड़ना।</span>
+                        </p>
+                        <div class="flex space-x-4">
+                            <a href="/" class="bg-indiaGreen dark:bg-emerald-600 hover:bg-green-700 dark:hover:bg-emerald-500 text-white font-semibold py-3 px-8 rounded shadow-lg transition duration-300 transform hover:-translate-y-1">
+                                <span class="lang-en">Start Chatting Now</span><span class="lang-hi">अभी चैट शुरू करें</span>
+                            </a>
+                            <a href="#about" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/50 text-white font-semibold py-3 px-8 rounded shadow-lg transition duration-300">
+                                <span class="lang-en">Learn More</span><span class="lang-hi">और जानें</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="w-1/3 h-full relative">
+                    <img src="/static/images/slide2.png" alt="Multilingual Voice Assistant" class="w-full h-full object-cover opacity-60">
+                    <div class="absolute inset-0 bg-gradient-to-r from-indiaGreen/80 dark:from-emerald-900/90 to-transparent"></div>
+                    <div class="absolute inset-0 flex flex-col justify-center px-4 sm:px-10 md:px-20 max-w-4xl">
+                        <span class="inline-block bg-white dark:bg-slate-800 text-indiaGreen dark:text-emerald-400 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider mb-4 w-max">
+                            <span class="lang-en">24/7 Availability</span><span class="lang-hi">24/7 उपलब्धता</span>
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 text-shadow-md leading-tight">
+                            <span class="lang-en">Instant Multilingual<br>Solutions</span>
+                            <span class="lang-hi">त्वरित बहुभाषी<br>समाधान</span>
+                        </h2>
+                        <p class="text-lg text-gray-100 dark:text-slate-300 mb-8 max-w-2xl text-shadow-md">
+                            <span class="lang-en">Upload queries via text or voice. Our intelligent engine matches your problem with expert data instantly, right on your smartphone.</span>
+                            <span class="lang-hi">बोलकर या लिखकर सवाल पूछें। हमारा स्मार्ट इंजन तुरंत सटीक समाधान देगा।</span>
+                        </p>
+                        <button onclick="document.getElementById('kisan-launcher').click()" class="bg-saffron dark:bg-orange-600 hover:bg-orange-500 text-white font-semibold py-3 px-8 rounded shadow-lg transition w-max duration-300 transform hover:-translate-y-1">
+                            <span class="lang-en">Try the Voice Assistant</span><span class="lang-hi">वॉयस असिस्टेंट आज़माएं</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="w-1/3 h-full relative">
+                    <img src="/static/images/slide3.png" alt="Expert Data Holograms" class="w-full h-full object-cover opacity-60">
+                    <div class="absolute inset-0 bg-gradient-to-r from-govBlue/90 dark:from-slate-900/90 to-transparent"></div>
+                    <div class="absolute inset-0 flex flex-col justify-center px-4 sm:px-10 md:px-20 max-w-4xl">
+                        <span class="inline-block bg-indiaGreen dark:bg-emerald-600 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wider mb-4 w-max">
+                            <span class="lang-en">Expert Knowledge Base</span><span class="lang-hi">विशेषज्ञ ज्ञान कोष</span>
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 text-shadow-md leading-tight">
+                            <span class="lang-en">Backed by Agricultural<br>Scientists</span>
+                            <span class="lang-hi">कृषि वैज्ञानिकों द्वारा<br>समर्थित</span>
+                        </h2>
+                        <p class="text-lg text-gray-100 dark:text-slate-300 mb-8 max-w-2xl text-shadow-md">
+                            <span class="lang-en">Every solution provided by Kisan AI is verified by KVK experts and sourced from the official PM-KUSUM database.</span>
+                            <span class="lang-hi">किसान AI द्वारा दिया गया हर समाधान कृषि विशेषज्ञों द्वारा प्रमाणित है।</span>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Carousel Controls -->
+            <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100 focus:opacity-100">
+                <i class="fa-solid fa-chevron-left text-xl"></i>
+            </button>
+            <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100 focus:opacity-100">
+                <i class="fa-solid fa-chevron-right text-xl"></i>
+            </button>
+
+            <!-- Carousel Indicators -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2">
+                <button onclick="goToSlide(0)" class="w-3 h-3 rounded-full bg-white transition" id="ind-0"></button>
+                <button onclick="goToSlide(1)" class="w-3 h-3 rounded-full bg-white/40 transition" id="ind-1"></button>
+                <button onclick="goToSlide(2)" class="w-3 h-3 rounded-full bg-white/40 transition" id="ind-2"></button>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 transition-colors duration-300">
+            <div class="container mx-auto px-4 py-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center divide-y sm:divide-y-0 sm:divide-x divide-gray-100 dark:divide-slate-800">
+                    <div class="p-4">
+                        <h3 class="text-3xl font-bold text-govBlue dark:text-emerald-400 mb-1">50,000+</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 font-medium uppercase tracking-wide">
+                            <span class="lang-en">Registered Farmers</span><span class="lang-hi">पंजीकृत किसान</span>
+                        </p>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-3xl font-bold text-indiaGreen dark:text-emerald-400 mb-1">1.2M</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 font-medium uppercase tracking-wide">
+                            <span class="lang-en">Queries Resolved</span><span class="lang-hi">सवाल हल किए गए</span>
+                        </p>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-3xl font-bold text-saffron dark:text-emerald-400 mb-1">700+</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 font-medium uppercase tracking-wide">
+                            <span class="lang-en">Registered KVKs</span><span class="lang-hi">पंजीकृत KVK</span>
+                        </p>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-3xl font-bold text-govBlue dark:text-emerald-400 mb-1">28</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 font-medium uppercase tracking-wide">
+                            <span class="lang-en">States Covered</span><span class="lang-hi">राज्य शामिल</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-16 bg-gray-50 dark:bg-slate-950 relative overflow-hidden transition-colors duration-300">
+            <div class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-saffron dark:bg-emerald-600 rounded-full opacity-5 blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-indiaGreen dark:bg-emerald-900 rounded-full opacity-5 blur-3xl"></div>
+            
+            <div class="container mx-auto px-4 relative z-10">
+                <div class="max-w-3xl mx-auto text-center mb-12">
+                    <h2 class="text-3xl font-bold text-govBlue dark:text-emerald-400 mb-4 inline-block border-b-4 border-saffron dark:border-emerald-600 pb-2">
+                        <span class="lang-en">About Kisan AI</span><span class="lang-hi">किसान AI के बारे में</span>
+                    </h2>
+                    <p class="text-gray-600 dark:text-slate-400 text-lg">
+                        <span class="lang-en">System of Agri-information Resources Auto-transmission and Technology Hub Interface.</span>
+                        <span class="lang-hi">कृषि-सूचना संसाधन स्व-संचरण और प्रौद्योगिकी हब इंटरफ़ेस प्रणाली।</span>
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-slate-800 transition-colors duration-300">
+                    <div class="p-8 md:p-12">
+                        <p class="text-gray-700 dark:text-slate-300 leading-relaxed mb-6 text-lg">
+                            <span class="lang-en">"Kisan AI" is an Information Communication and Technology (ICT) based interface solution with an ultimate goal of creating an intelligent online platform for supporting agriculture at a local niche with a national perspective.</span>
+                            <span class="lang-hi">"किसान एआई" सूचना संचार और प्रौद्योगिकी (ICT) आधारित एक इंटरफेस है, जिसका उद्देश्य राष्ट्रीय दृष्टिकोण के साथ स्थानीय कृषि का समर्थन करने के लिए एक बुद्धिमान ऑनलाइन मंच बनाना है।</span>
+                        </p>
+                        <p class="text-gray-700 dark:text-slate-300 leading-relaxed mb-8 text-lg">
+                            <span class="lang-en">It is intended to provide a seamless, multimedia, multi-ways connectivity to the farmers with the latest agricultural technologies, knowledge base and the pool of a large number of subject matter experts. By leveraging cutting-edge Artificial Intelligence and Machine Learning via Llama 3.2, farmers receive precise, deterministic advice without hallucination risk.</span>
+                            <span class="lang-hi">यह किसानों को नवीनतम कृषि प्रौद्योगिकियों, ज्ञानकोष और विषय विशेषज्ञों के साथ सहज मल्टीमीडिया कनेक्टिविटी प्रदान करने का इरादा रखता है। ललामा 3.2 (Llama 3.2) के माध्यम से कृत्रिम बुद्धिमत्ता का लाभ उठाकर, किसानों को सटीक और विश्वसनीय सलाह मिलती है।</span>
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-10">
+                            <div class="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg border-l-4 border-indiaGreen dark:border-emerald-500 transition-colors duration-300">
+                                <h3 class="text-xl font-bold text-govBlue dark:text-emerald-400 mb-3"><i class="fa-solid fa-robot text-indiaGreen dark:text-emerald-400 mr-2"></i> 
+                                    <span class="lang-en">Digital Query Assistant (DQA)</span><span class="lang-hi">डिजिटल क्वेरी असिस्टेंट (DQA)</span>
+                                </h3>
+                                <p class="text-gray-600 dark:text-slate-300">
+                                    <span class="lang-en">Farmers can interact via text or voice. The query is processed through our TF-IDF semantic engine and routed to exact expert solutions from `adv_data.xlsx`.</span>
+                                    <span class="lang-hi">किसान पाठ या आवाज़ के माध्यम से बातचीत कर सकते हैं। प्रश्न को हमारे सिमेंटिक इंजन के माध्यम से संसाधित किया जाता है और विशेषज्ञ समाधान प्रदान किया जाता है।</span>
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-slate-800 p-6 rounded-lg border-l-4 border-saffron dark:border-orange-500 transition-colors duration-300">
+                                <h3 class="text-xl font-bold text-govBlue dark:text-emerald-400 mb-3"><i class="fa-solid fa-database text-saffron dark:text-orange-400 mr-2"></i> 
+                                    <span class="lang-en">Technology Library</span><span class="lang-hi">प्रौद्योगिकी पुस्तकालय</span>
+                                </h3>
+                                <p class="text-gray-600 dark:text-slate-300">
+                                    <span class="lang-en">A continuously updated multi-lingual knowledge base. Unanswered queries are logged and reviewed by KVK experts weekly for continuous improvement.</span>
+                                    <span class="lang-hi">निरंतर अद्यतन किया जाने वाला बहुभाषी ज्ञानकोष। अनुत्तरित प्रश्नों को लॉग किया जाता है और KVK विशेषज्ञों द्वारा उनकी समीक्षा की जाती है।</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Links / CTA -->
+        <section class="py-12 bg-govBlue dark:bg-slate-900 border-t border-transparent dark:border-slate-800 text-white transition-colors duration-300">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="text-2xl font-bold mb-6">
+                    <span class="lang-en">Experience the AI Assistant Now</span><span class="lang-hi">अभी AI असिस्टेंट का अनुभव करें</span>
+                </h2>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="/chat-app/" class="bg-white dark:bg-slate-800 text-govBlue dark:text-emerald-400 font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition flex items-center">
+                        <i class="fa-solid fa-message mr-2"></i> <span class="lang-en">Open Text Chat</span><span class="lang-hi">टेक्स्ट चैट खोलें</span>
+                    </a>
+                    <button onclick="document.getElementById('kisan-launcher').click()" class="bg-saffron dark:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-orange-500 dark:hover:bg-emerald-500 transition flex items-center">
+                        <i class="fa-solid fa-microphone mr-2"></i> <span class="lang-en">Open Voice Assistant</span><span class="lang-hi">वॉयस असिस्टेंट खोलें</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 dark:bg-slate-950 text-gray-300 dark:text-slate-400 pt-16 pb-8 border-t-4 border-indiaGreen dark:border-emerald-600 transition-colors duration-300">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div class="col-span-1 md:col-span-2">
+                    <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 dark:border-slate-800 pb-2 inline-block">
+                        <span class="lang-en">Kisan AI Portal</span><span class="lang-hi">किसान AI पोर्टल</span>
+                    </h3>
+                    <p class="mb-4 text-sm leading-relaxed max-w-md">
+                        <span class="lang-en">Powered by Interactive Information Dissemination System (IIDS), Digital India Corporation (DIC), Ministry of Electronics and Information Technology (MeitY), Govt. of India.</span>
+                        <span class="lang-hi">डिजिटल इंडिया कॉर्पोरेशन (DIC), इलेक्ट्रॉनिकी और सूचना प्रौद्योगिकी मंत्रालय, भारत सरकार द्वारा संचालित।</span>
+                    </p>
+                    <div class="flex space-x-4 mt-6">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 dark:bg-slate-800 flex items-center justify-center hover:bg-govBlue dark:hover:bg-emerald-600 hover:text-white transition"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-400 dark:hover:bg-emerald-600 hover:text-white transition"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 dark:bg-slate-800 flex items-center justify-center hover:bg-red-600 dark:hover:bg-emerald-600 hover:text-white transition"><i class="fa-brands fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-4"><span class="lang-en">Quick Links</span><span class="lang-hi">महत्वपूर्ण लिंक</span></h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white transition"><i class="fa-solid fa-angle-right mr-2 text-saffron dark:text-emerald-500"></i> <span class="lang-en">About Us</span><span class="lang-hi">हमारे बारे में</span></a></li>
+                        <li><a href="#" class="hover:text-white transition"><i class="fa-solid fa-angle-right mr-2 text-saffron dark:text-emerald-500"></i> <span class="lang-en">Ministry of Agriculture</span><span class="lang-hi">कृषि मंत्रालय</span></a></li>
+                        <li><a href="#" class="hover:text-white transition"><i class="fa-solid fa-angle-right mr-2 text-saffron dark:text-emerald-500"></i> <span class="lang-en">Digital India</span><span class="lang-hi">डिजिटल इंडिया</span></a></li>
+                        <li><a href="#" class="hover:text-white transition"><i class="fa-solid fa-angle-right mr-2 text-saffron dark:text-emerald-500"></i> <span class="lang-en">Farmer Registration</span><span class="lang-hi">किसान पंजीकरण</span></a></li>
+                        <li><a href="#" class="hover:text-white transition"><i class="fa-solid fa-angle-right mr-2 text-saffron dark:text-emerald-500"></i> <span class="lang-en">Contact Us</span><span class="lang-hi">संपर्क करें</span></a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-4"><span class="lang-en">Mobile Apps</span><span class="lang-hi">मोबाइल ऐप्स</span></h3>
+                    <div class="space-y-4">
+                        <a href="#" class="flex items-center bg-gray-800 dark:bg-slate-800 p-3 rounded hover:bg-gray-700 dark:hover:bg-slate-700 transition">
+                            <i class="fa-brands fa-google-play text-2xl mr-3 text-indiaGreen dark:text-emerald-500"></i>
+                            <div>
+                                <p class="text-xs text-gray-400 dark:text-slate-400"><span class="lang-en">Get it on</span><span class="lang-hi">यहाँ से डाउनलोड करें</span></p>
+                                <p class="font-bold text-white">Google Play</p>
+                            </div>
+                        </a>
+                        <a href="#" class="flex items-center bg-gray-800 dark:bg-slate-800 p-3 rounded hover:bg-gray-700 dark:hover:bg-slate-700 transition">
+                            <i class="fa-brands fa-apple text-2xl mr-3"></i>
+                            <div>
+                                <p class="text-xs text-gray-400 dark:text-slate-400"><span class="lang-en">Download on the</span><span class="lang-hi">यहाँ से डाउनलोड करें</span></p>
+                                <p class="font-bold text-white">App Store</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 dark:border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs">
+                <p>&copy; 2026 Kisan AI. <span class="lang-en">All rights reserved.</span><span class="lang-hi">सर्वाधिकार सुरक्षित।</span></p>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-white transition"><span class="lang-en">Privacy Policy</span><span class="lang-hi">गोपनीयता नीति</span></a>
+                    <a href="#" class="hover:text-white transition"><span class="lang-en">Terms of Use</span><span class="lang-hi">उपयोग की शर्तें</span></a>
+                    <a href="#" class="hover:text-white transition"><span class="lang-en">Disclaimer</span><span class="lang-hi">अस्वीकरण</span></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts for Logic & Carousel -->
+    <script>
+        /* --- Language Toggle --- */
+        function applyLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.getElementById('lang-select').value = lang;
+            localStorage.setItem('kisan-landing-lang', lang);
+        }
+
+        function toggleLanguage() {
+            const select = document.getElementById('lang-select');
+            applyLanguage(select.value);
+        }
+
+        // Initialize Language
+        const savedLang = localStorage.getItem('kisan-landing-lang') || 'hi';
+        applyLanguage(savedLang);
+
+        /* --- Global Theme Toggle --- */
+        function applyGlobalTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('global-theme-btn').innerHTML = '<i class="fa-solid fa-sun text-yellow-300"></i>';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('global-theme-btn').innerHTML = '<i class="fa-solid fa-moon"></i>';
+            }
+            // Sync with chatbot widget if it exists
+            if (typeof wApplyTheme === "function") {
+                wApplyTheme(isDark);
+            }
+        }
+
+        function toggleGlobalTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem("kisan-theme", isDark ? "light" : "dark");
+            applyGlobalTheme(!isDark);
+        }
+
+        // Initialize Theme from localStorage (used by widget too)
+        const savedTheme = localStorage.getItem("kisan-theme") === "dark";
+        applyGlobalTheme(savedTheme);
+
+        /* --- Font Size Accessibility --- */
+        let currentFontLevel = 0;
+        const fontLevels = {
+            '-2': '80%',
+            '-1': '90%',
+            '0': '100%',
+            '1': '110%',
+            '2': '120%'
+        };
+
+        function applyFontSize(level) {
+            level = parseInt(level) || 0;
+            if (level < -2) level = -2;
+            if (level > 2) level = 2;
+            
+            currentFontLevel = level;
+            document.documentElement.style.fontSize = fontLevels[level];
+            localStorage.setItem('kisan-font-size', level);
+        }
+
+        function changeFontSize(step) {
+            if (step === 0) {
+                applyFontSize(0);
+            } else {
+                applyFontSize(currentFontLevel + step);
+            }
+        }
+
+        // Initialize Font Size
+        const savedFont = localStorage.getItem('kisan-font-size');
+        if (savedFont !== null) {
+            applyFontSize(savedFont);
+        }
+
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-menu-icon');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            } else {
+                menu.classList.add('hidden');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            }
+        }
+
+        /* --- Carousel Logic --- */
+        let currentSlide = 0;
+        const totalSlides = 3;
+        const carousel = document.getElementById('carousel');
+        let autoSlideInterval;
+
+        function updateCarousel() {
+            carousel.style.transform = `translateX(-${(currentSlide * 100) / totalSlides}%)`;
+            
+            // Update indicators
+            for (let i = 0; i < totalSlides; i++) {
+                const ind = document.getElementById(`ind-${i}`);
+                if (i === currentSlide) {
+                    ind.classList.remove('bg-white/40');
+                    ind.classList.add('bg-white');
+                } else {
+                    ind.classList.remove('bg-white');
+                    ind.classList.add('bg-white/40');
+                }
+            }
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateCarousel();
+            resetInterval();
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            updateCarousel();
+            resetInterval();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateCarousel();
+            resetInterval();
+        }
+
+        function startInterval() {
+            autoSlideInterval = setInterval(nextSlide, 5000);
+        }
+
+        function resetInterval() {
+            clearInterval(autoSlideInterval);
+            startInterval();
+        }
+
+        // Initialize Carousel
+        startInterval();
+    </script>
+
+    <!-- Chatbot Widget -->
+    {% include "_widget.html" %}
+</body>
+</html>
