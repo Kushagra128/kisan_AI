@@ -1,11 +1,11 @@
-# 🌾 Kisan AI — Offline Hindi Agricultural Assistant
+# 🌾 Kisan AI — Agricultural Assistant
 
 <p align="center">
   <img src="static/images/logo.png" alt="Kisan AI Logo" width="120"/>
 </p>
 
 <p align="center">
-  <b>A 100% offline-capable AI chatbot for Indian farmers — Hindi voice input, real-time STT, and intelligent crop advisory.</b>
+  <b>A AI chatbot for Indian farmers — Hindi voice input, real-time STT, and intelligent crop advisory.</b>
 </p>
 
 <p align="center">
