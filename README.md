@@ -1,7 +1,7 @@
 # 🌾 Kisan AI — Offline Hindi Agricultural Assistant
 
 <p align="center">
-  <img src="[static/images/logo.png](https://pngtree.com/freepng/original-hand-painted-crop-wheat_5765362.html)" alt="Kisan AI Logo" width="120"/>
+  <img src="static/images/logo.png" alt="Kisan AI Logo" width="120"/>
 </p>
 
 <p align="center">
