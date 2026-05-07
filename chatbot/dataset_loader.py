@@ -149,48 +149,92 @@ HINGLISH_EXPAND = {
 
 INTENT_KEYWORDS = {
     "pest": [
-        "कीड़", "कीट", "इल्ली", "सुंडी", "मक्खी", "माहू", "चेपा",
-        "aphid", "keede", "keet", "kide", "sundi",
-        "whitefly", "thrips", "mite", "माइट", "mealybug", "bug",
-        "कृमि", "लट", "मिलीबग", "खा रहे", "kha rahe",
-        "gandhi", "grasshopper", "stem borer", "tana bedhak",
-        "hispa", "armyworm",
+        "कीट", "कीड़े", "कीड़ा", "keede", "keeda", "keet", "kide", "insect", "insects", "pest", "pests",
+        "bug", "bugs", "attacking", "attack",
+        "सुंडी", "इल्ली", "sundi", "illi", "caterpillar", "larva", "larvae",
+        "मक्खी", "makhi", "fly", "flies",
+        "माहू", "चेपा", "mahu", "chepa", "aphid", "aphids",
+        "माइट", "mite", "mites",
+        "थ्रिप्स", "thrips",
+        "सफेद मक्खी", "whitefly", "white fly",
+        "मिलीबग", "mealybug", "mealy bug",
+        "गंधी बग", "gandhi bug",
+        "टिड्डी", "tiddi", "grasshopper", "locust",
+        "तना बेधक", "stem borer", "borer",
+        "पत्ती लपेटक", "leaf folder", "leafroller",
+        "हिस्पा", "hispa",
+        "भूरा फुदका", "brown planthopper", "bph",
+        "सैनिक कीट", "armyworm", "army worm",
+        "कटुआ", "cutworm", "cut worm",
+        "शल्क कीट", "scale insect", "scale",
+        "जैसिड", "jassid",
+        "लाल माइट", "red spider", "spider mite",
     ],
     "disease": [
-        "रोग", "बीमारी", "फफूंद", "fungal", "blight", "blast", "spot",
-        "झुलसा", "सड़न", "गलन", "rog", "bimari", "dhabbe", "dabbe",
-        "canker", "wilt", "mosaic", "धब्बे", "काले", "मुरझा",
-        "bakane", "khaira", "tikka", "rust", "रतुआ",
+        "रोग", "बीमारी", "rog", "bimari", "disease", "diseases", "infection", "infected",
+        "झुलसा", "अंगमारी", "jhulsa", "angmari", "blight",
+        "धब्बे", "दाग", "dhabbe", "daag", "spot", "spots", "blotch",
+        "सड़न", "गलन", "sadan", "galan", "rot", "rotting", "decay",
+        "फफूंद", "कवक", "fungus", "fungal", "mold", "mould",
+        "मुरझाना", "उकठा", "murjhana", "uktha", "wilt", "wilting",
+        "ब्लास्ट", "झोंका", "blast",
+        "मोज़ेक", "mosaic",
+        "चूर्णिल आसिता", "powdery mildew", "mildew",
+        "कैंकर", "canker",
+        "रतुआ", "rust",
+        "टिक्का", "tikka",
+        "बकानी", "bakane", "bakanai",
+        "खैरा", "khaira",
     ],
     "fertilizer": [
-        "खाद", "उर्वरक", "NPK", "DAP", "यूरिया", "पोषण", "khad",
-        "fertilizer", "deficiency", "कमी", "पीली", "yellow",
-        "नाइट्रोजन", "फास्फोरस", "पोटाश", "kami", "urea", "zinc",
+        "खाद", "उर्वरक", "khad", "urvarak", "fertilizer", "fertilizers", "manure", "compost",
+        "यूरिया", "urea",
+        "डीएपी", "DAP", "dap",
+        "पोटाश", "potash",
+        "एनपीके", "NPK", "npk",
+        "जिंक", "zinc",
+        "बोरोन", "boron",
+        "आयरन", "iron",
+        "कैल्शियम", "calcium",
+        "मैग्नीशियम", "magnesium",
+        "सल्फर", "sulphur", "sulfur",
+        "पोषक", "पोषण", "पोषक तत्व", "nutrient", "nutrients", "nutrition",
+        "कमी", "kami", "deficiency", "shortage", "lack",
+        "amount", "quantity", "dose", "dosage",
     ],
     "irrigation": [
-        "पानी", "सिंचाई", "irrigation", "water", "paani", "sinchai", "pani",
-        "नमी", "moisture", "drought", "सूखा", "drip", "ड्रिप", "kitna",
-        "कितना", "कब दें", "कब लगाएं", "दिनों बाद",
+        "पानी", "सिंचाई", "pani", "sinchai", "water", "watering", "irrigation",
+        "ड्रिप", "drip",
+        "स्प्रिंकलर", "sprinkler",
+        "कब", "कितना", "kab", "kitna", "when", "how much", "frequency",
+        "जल", "jal",
+        "नमी", "nami", "moisture",
     ],
     "growth": [
-        "विकास", "growth", "बढ़वार", "फल", "flower", "फूल", "yield",
-        "उपज", "production", "नहीं लग", "गिर", "खेती", "बुवाई",
-        "sowing", "harvesting", "कटाई",
+        "उपज", "पैदावार", "upaj", "paidawar", "yield", "production", "produce",
+        "बढ़ाना", "बढ़ाएं", "badhana", "badhaye", "increase", "boost", "improve", "enhance",
+        "विकास", "vikas", "growth", "growing", "development",
+        "फल", "फूल", "phal", "phool", "fruit", "fruits", "flower", "flowers", "flowering",
+        "नहीं लग रहे", "नहीं आ रहे", "not coming", "not growing",
+        "गिर रहे", "गिरना", "falling", "dropping", "drop",
     ],
     "cultivation": [
-        "ugane", "ugana", "ugaye", "kaise ugaye", "kaise ugayen",
-        "kaise kare", "kaise karen", "kaise lagaye", "kaise lagayen",
-        "kya chahiye", "kya kya chahiye", "chahiye hoga",
-        "kheti kaise", "kheti karna", "kheti ke liye",
-        "ugaane", "ugaana",
-        "उगाना", "उगाएं", "उगाने", "खेती कैसे", "खेती करना",
-        "कैसे उगाएं", "क्या चाहिए", "लगाने का तरीका",
-        "बुवाई कैसे", "रोपाई", "बीज कैसे", "खेत तैयार",
-        "how to grow", "how to cultivate", "cultivation",
+        "खेती", "उगाना", "kheti", "ugana", "cultivation", "farming", "growing", "grow",
+        "बुवाई", "बोना", "buwai", "bona", "sowing", "planting", "plant", "seed",
+        "कटाई", "katai", "harvest", "harvesting",
+        "तैयारी", "taiyari", "preparation", "prepare",
+        "विधि", "तरीका", "vidhi", "tarika", "method", "technique", "way", "process",
+        "कैसे", "kaise", "how", "how to",
+        "समय", "समय", "time", "timing", "season",
+        "दूरी", "doori", "spacing", "distance",
+        "गहराई", "gahrai", "depth",
     ],
     "general": [
-        "कैसे", "how", "जानकारी", "information", "advice", "सलाह",
-        "kaise", "batao", "bataiye",
+        "जानकारी", "जानकारी", "jankari", "information", "info", "details",
+        "बताएं", "बताओ", "bataye", "batao", "tell", "explain",
+        "मदद", "सहायता", "madad", "sahayata", "help", "assist", "support",
+        "सलाह", "salah", "advice", "suggestion",
+        "कृपया", "कृपया", "kripya", "please",
     ],
 }
 
@@ -206,20 +250,23 @@ INTENT_LABELS = {
 
 
 class KisanDataset:
-    def __init__(self, filepath="adv_data.xlsx"):
-        print("📂 Loading dataset...", flush=True)
-        df_raw = pd.read_excel(filepath)
-        self.df = (
-            df_raw[["problem", "solution", "cropname"]]
-            .dropna(subset=["cropname", "problem"])
-            .fillna("")
-            .copy()
-        )
-        self.df["cropname"] = self.df["cropname"].astype(str).str.strip()
-        self.df["problem"]  = self.df["problem"].astype(str).str.strip()
-        self.df["solution"] = self.df["solution"].astype(str).str.strip()
-        self.df = self.df[self.df["problem"].str.len() > 5].reset_index(drop=True)
-        self.crop_list = self.df["cropname"].unique().tolist()
+    def __init__(self, filepath=None):
+        print("📂 Loading dataset from PostgreSQL...", flush=True)
+        from chatbot.models import AgriculturalAdvice
+        import pandas as pd
+        
+        qs = AgriculturalAdvice.objects.all().values("problem", "solution", "cropname")
+        self.df = pd.DataFrame(list(qs))
+        
+        if self.df.empty:
+            self.df = pd.DataFrame(columns=["problem", "solution", "cropname"])
+        else:
+            self.df["cropname"] = self.df["cropname"].astype(str).str.strip()
+            self.df["problem"]  = self.df["problem"].astype(str).str.strip()
+            self.df["solution"] = self.df["solution"].astype(str).str.strip()
+            self.df = self.df[self.df["problem"].str.len() > 5].reset_index(drop=True)
+            
+        self.crop_list = self.df["cropname"].unique().tolist() if not self.df.empty else []
 
         self.df["_index_text"] = self.df["cropname"] + " " + self.df["problem"]
         self._vectorizer = TfidfVectorizer(
@@ -335,6 +382,5 @@ _dataset = None
 def get_dataset() -> KisanDataset:
     global _dataset
     if _dataset is None:
-        dataset_path = os.path.join(os.path.dirname(__file__), "adv_data.xlsx")
-        _dataset = KisanDataset(dataset_path)
+        _dataset = KisanDataset()
     return _dataset

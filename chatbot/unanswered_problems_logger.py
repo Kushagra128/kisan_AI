@@ -2,10 +2,10 @@
 unanswered_problems_logger.py
 -----------------------------------
 Backend helper to log unanswered / new problems from Kisan Mitra
-into unanswered_problems.xlsx
+into PostgreSQL.
 
 Call save_problem() from your Flask/Django route when a new
-query arrives that is NOT in adv_data.xlsx.
+query arrives that is NOT in the database.
 
 Usage:
     from unanswered_problems_logger import save_problem
@@ -14,23 +14,7 @@ Usage:
 
 import os
 from datetime import datetime
-from openpyxl import load_workbook, Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
-
-XLSX_PATH = os.path.join(os.path.dirname(__file__), "unanswered_problems.xlsx")
-
-HEADERS = ['Sr No', 'Timestamp', 'User Problem (Query)', 'Brief Solution', 'Category', 'Status']
-COL_WIDTHS = [8, 22, 52, 62, 22, 18]
-
-HEADER_FILL  = PatternFill('solid', start_color='2E7D32')
-HEADER_FONT  = Font(bold=True, color='FFFFFF', name='Arial', size=11)
-ROW_FILL_ALT = PatternFill('solid', start_color='E8F5E9')
-DATA_FONT    = Font(name='Arial', size=10)
-BORDER       = Border(
-    left=Side(style='thin'), right=Side(style='thin'),
-    top=Side(style='thin'),  bottom=Side(style='thin')
-)
+from chatbot.models import UnansweredProblem
 
 CATEGORY_MAP = {
     'rog': 'Fasal Rog', 'disease': 'Fasal Rog', 'fungal': 'Fasal Rog', 'dhabb': 'Fasal Rog',
@@ -48,32 +32,9 @@ def detect_category(query: str) -> str:
     return 'Anya'
 
 
-def _ensure_file() -> None:
-    """Create xlsx if it doesn't exist."""
-    if os.path.exists(XLSX_PATH):
-        return
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = 'Unanswered Problems'
-
-    for col, (h, w) in enumerate(zip(HEADERS, COL_WIDTHS), 1):
-        ws.column_dimensions[get_column_letter(col)].width = w
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.fill   = HEADER_FILL
-        cell.font   = HEADER_FONT
-        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-        cell.border = BORDER
-
-    ws.row_dimensions[1].height = 30
-    ws.freeze_panes = 'A2'
-    ws.auto_filter.ref = f"A1:{get_column_letter(len(HEADERS))}1"
-    wb.save(XLSX_PATH)
-
-
 def save_problem(query: str, brief_solution: str, category: str = None, status: str = 'Pending Review') -> int:
     """
-    Append a new unanswered problem row, or update it if it already exists.
+    Append a new unanswered problem row to PostgreSQL database.
 
     Args:
         query           : The user's original question text
@@ -82,77 +43,45 @@ def save_problem(query: str, brief_solution: str, category: str = None, status: 
         status          : Default 'Pending Review'
 
     Returns:
-        Row number where data was written.
+        The ID of the created or updated UnansweredProblem record.
     """
-    _ensure_file()
-
-    wb = load_workbook(XLSX_PATH)
-    ws = wb.active
-
     if category is None:
         category = detect_category(query)
 
-    # Search if query already exists
-    existing_row = None
-    for row in range(2, ws.max_row + 1):
-        cell_query = ws.cell(row=row, column=3).value
-        if cell_query and cell_query.strip().lower() == query.strip().lower():
-            existing_row = row
-            break
-
-    timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M')
-
-    if existing_row:
-        # Update existing row
-        ws.cell(row=existing_row, column=2, value=timestamp_str)
-        ws.cell(row=existing_row, column=4, value=brief_solution)
-        ws.cell(row=existing_row, column=6, value=status)
-        target_row = existing_row
-        print(f"[unanswered_logger] Updated row {target_row} for query: {query[:60]}...")
-    else:
-        # Find next empty row
-        target_row = ws.max_row + 1
-        sr_no = target_row - 1  # Header is row 1
-
-        row_data = [
-            sr_no,
-            timestamp_str,
-            query,
-            brief_solution,
-            category,
-            status,
-        ]
-
-        for col, val in enumerate(row_data, 1):
-            cell = ws.cell(row=target_row, column=col, value=val)
-            cell.font   = DATA_FONT
-            cell.border = BORDER
-            cell.alignment = Alignment(wrap_text=True, vertical='center')
-            if target_row % 2 == 0:
-                cell.fill = ROW_FILL_ALT
-
-        ws.row_dimensions[target_row].height = 25
-        print(f"[unanswered_logger] Saved new row {target_row}: {query[:60]}...")
-
-    # Handle PermissionError when the file is open in Excel
     try:
-        wb.save(XLSX_PATH)
-    except PermissionError:
-        print(f"[unanswered_logger] WARNING: {XLSX_PATH} is open in Excel. Saving to fallback file.")
-        fallback_path = XLSX_PATH.replace('.xlsx', '_fallback.xlsx')
-        try:
-            wb.save(fallback_path)
-            print(f"[unanswered_logger] Saved to {fallback_path}")
-        except Exception as e:
-            print(f"[unanswered_logger] Error saving fallback: {e}")
+        # Search if query already exists
+        problem_record = UnansweredProblem.objects.filter(query__iexact=query.strip()).first()
 
-    return target_row
+        if problem_record:
+            # Update existing row
+            problem_record.timestamp = datetime.now()
+            # If we wanted to update brief_solution, we'd need a field for it, 
+            # currently the model only has query, detected_intent, detected_crop, timestamp.
+            problem_record.detected_intent = category
+            problem_record.save()
+            print(f"[unanswered_logger] Updated record {problem_record.id} for query: {query[:60]}...")
+            return problem_record.id
+        else:
+            # Create new record
+            problem_record = UnansweredProblem.objects.create(
+                query=query.strip(),
+                detected_intent=category,
+            )
+            print(f"[unanswered_logger] Saved new record {problem_record.id}: {query[:60]}...")
+            return problem_record.id
+    except Exception as e:
+        print(f"[unanswered_logger] Error saving to DB: {e}")
+        return -1
 
 
 # -------------------------------------------------------
 # CLI test
 # -------------------------------------------------------
 if __name__ == '__main__':
+    import django
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kisan_project.settings')
+    django.setup()
+    
     print("Testing logger...")
     save_problem(
         query="Meri tamatar ki fasal mein patta mur raha hai",
@@ -163,4 +92,4 @@ if __name__ == '__main__':
         query="Sarson mein aphid ka attack ho gaya hai",
         brief_solution="Imidacloprid 0.5ml/L water mein spray karein",
     )
-    print(f"Done. File: {XLSX_PATH}")
+    print("Done.")

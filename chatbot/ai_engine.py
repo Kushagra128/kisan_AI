@@ -12,12 +12,21 @@ Pipeline:
 import json
 import requests
 import os
+import sys
 from .dataset_loader import get_dataset, INTENT_KEYWORDS, INTENT_LABELS, CROP_ALIASES
 from .unanswered_problems_logger import save_problem
 import re
 
+def _log(*args, **kwargs):
+    """Safe print that won't crash on Windows cp1252 terminals with emoji."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        safe = " ".join(str(a).encode('ascii', 'replace').decode('ascii') for a in args)
+        print(safe, **{k: v for k, v in kwargs.items() if k != 'flush'}, flush=True)
+
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL      = "llama3.2"
+MODEL      = "kisan-ai"
 
 try:
     from dotenv import load_dotenv
@@ -58,6 +67,7 @@ def extract_brief_solution(text: str) -> str:
 # ── Off-topic / greeting detector ─────────────────────────────────────────────
 _GREETING_PATTERNS = {
     "hello", "hi", "hey", "helo", "hii", "hiii",
+    "हेलो", "हेल्लो", "हाय", "हे",
     "namaste", "namaskar", "नमस्ते", "नमस्कार",
     "good morning", "good evening", "good night", "good afternoon",
     "how are you", "aap kaise ho", "kya haal", "क्या हाल",
@@ -380,15 +390,28 @@ def is_privacy_query(query: str) -> bool:
 def is_off_topic(query: str) -> bool:
     """Returns True if query is a greeting or clearly non-farming."""
     q = query.strip().lower()
-    # Exact match
+    
+    # Exact match against greeting set
     if q in _GREETING_PATTERNS:
         return True
-    # Very short with no farming keywords
+    
+    # If every unique word in the query is a greeting word, it's off-topic
+    # e.g. "हेलो हेलो हेलो" or "hello hello hello" from STT noise
+    words = q.split()
+    if words and all(w in _GREETING_PATTERNS for w in set(words)):
+        return True
+    
+    # If all words are identical repetitions (STT noise) and no farming hint
     farming_hints = ["फसल", "कीट", "रोग", "खाद", "पानी", "बीज", "पेड़", "पौधा",
                      "crop", "pest", "disease", "fertilizer", "water", "seed",
                      "ugana", "kheti", "fasal", "keede", "rog", "khad"]
-    if len(q.split()) <= 2 and not any(h in q for h in farming_hints):
+    if len(set(words)) == 1 and not any(h in q for h in farming_hints):
         return True
+    
+    # Very short with no farming keywords
+    if len(words) <= 2 and not any(h in q for h in farming_hints):
+        return True
+    
     return False
 
 # ── Hindi digit → English digit conversion ────────────────────────────────────
@@ -601,6 +624,37 @@ def stream_ollama(prompt: str):
     Generator: yields text chunks as they arrive from Ollama streaming API or Groq API.
     Yields None on error/timeout.
     """
+    # ── PRIMARY: Local Ollama ─────────────────────────────────────────────────
+    payload = {
+        "model":  MODEL,
+        "prompt": prompt,
+        "stream": True,
+        "options": {
+            "temperature":    0.20,
+            "top_p":          0.90,
+            "num_predict":    1200,
+            "repeat_penalty": 1.1,
+        },
+    }
+    try:
+        with requests.post(OLLAMA_URL, json=payload, stream=True, timeout=180) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if line:
+                    try:
+                        chunk = json.loads(line)
+                        token = chunk.get("response", "")
+                        if token:
+                            yield token
+                        if chunk.get("done"):
+                            break
+                    except json.JSONDecodeError:
+                        continue
+        return  # Success — don't fall through to Groq
+    except Exception as e:
+        print(f"❌ Ollama streaming error, falling back to Groq: {e}", flush=True)
+
+    # ── FALLBACK: Groq API ────────────────────────────────────────────────────
     if GROQ_API_KEY:
         headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
         payload = {
@@ -631,61 +685,16 @@ def stream_ollama(prompt: str):
                                         yield token
                             except json.JSONDecodeError:
                                 continue
+            return
         except Exception as e:
-            print(f"❌ Groq streaming error: {e}", flush=True)
-            yield None
-        return
+            print(f"❌ Groq streaming error, falling back to local Dataset: {e}", flush=True)
 
-    payload = {
-        "model":  MODEL,
-        "prompt": prompt,
-        "stream": True,
-        "options": {
-            "temperature":    0.20,
-            "top_p":          0.90,
-            "num_predict":    1200,
-            "repeat_penalty": 1.1,
-        },
-    }
-    try:
-        with requests.post(OLLAMA_URL, json=payload, stream=True, timeout=180) as resp:
-            resp.raise_for_status()
-            for line in resp.iter_lines():
-                if line:
-                    try:
-                        chunk = json.loads(line)
-                        token = chunk.get("response", "")
-                        if token:
-                            yield token
-                        if chunk.get("done"):
-                            break
-                    except json.JSONDecodeError:
-                        continue
-    except Exception as e:
-        print(f"❌ Ollama streaming error: {e}", flush=True)
-        yield None  # sentinel: caller knows to use fallback
+    yield None  # sentinel: caller knows to use fallback
 
 
 def query_ollama_full(prompt: str) -> str | None:
     """Non-streaming call — used only in fallback path."""
-    if GROQ_API_KEY:
-        headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-        payload = {
-            "model": "llama-3.1-8b-instant",
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False,
-            "temperature": 0.20,
-            "top_p": 0.90,
-            "max_tokens": 1200
-        }
-        try:
-            resp = requests.post(GROQ_URL, headers=headers, json=payload, timeout=180)
-            resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            print(f"❌ Groq API error: {e}", flush=True)
-            return None
-
+    # ── PRIMARY: Local Ollama ─────────────────────────────────────────────────
     payload = {
         "model":  MODEL,
         "prompt": prompt,
@@ -701,8 +710,28 @@ def query_ollama_full(prompt: str) -> str | None:
         resp = requests.post(OLLAMA_URL, json=payload, timeout=180)
         resp.raise_for_status()
         return resp.json().get("response", "").strip()
-    except Exception:
-        return None
+    except Exception as e:
+        print(f"❌ Ollama API error, falling back to Groq: {e}", flush=True)
+
+    # ── FALLBACK: Groq API ────────────────────────────────────────────────────
+    if GROQ_API_KEY:
+        headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+        payload = {
+            "model": "llama-3.1-8b-instant",
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            "temperature": 0.20,
+            "top_p": 0.90,
+            "max_tokens": 1200
+        }
+        try:
+            resp = requests.post(GROQ_URL, headers=headers, json=payload, timeout=180)
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            print(f"❌ Groq API error, falling back to local Dataset: {e}", flush=True)
+
+    return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -810,7 +839,7 @@ def stream_answer(user_query: str):
 
     # ── Privacy guard — block system/internal questions ───────────────────
     if is_privacy_query(user_query):
-        print(f"🔒 Privacy query blocked: '{user_query}'", flush=True)
+        _log(f"[Privacy] blocked: '{user_query}'", flush=True)
         meta = {
             "type": "meta", "crop": None, "intent": "general",
             "source": "system", "rows_found": 0, "top_similarity": 0,
@@ -823,7 +852,7 @@ def stream_answer(user_query: str):
 
     # ── Off-topic / greeting guard ─────────────────────────────────────────
     if is_off_topic(user_query):
-        print(f"👋 Off-topic query detected: '{user_query}' → instant reply", flush=True)
+        _log(f"[Off-topic] '{user_query}' -> instant greeting reply", flush=True)
         meta = {
             "type": "meta", "crop": None, "intent": "general",
             "source": "system", "rows_found": 0, "top_similarity": 0,
@@ -839,35 +868,37 @@ def stream_answer(user_query: str):
     rows   = ds.retrieve(user_query, crop_hindi, intent, top_k=5)
 
     # ── Debug log ──────────────────────────────────────────────────────────
-    print(f"\n{'─'*60}", flush=True)
-    print(f"❓ Query    : {user_query}", flush=True)
-    print(f"🌱 Crop     : {crop_hindi or 'N/A'} (alias: {crop_alias or 'N/A'})", flush=True)
-    print(f"🔍 Intent   : {intent}", flush=True)
-    print(f"📊 Matches  : {len(rows)} rows (threshold-filtered)", flush=True)
+    _log(f"\n{'─'*60}", flush=True)
+    _log(f"Query    : {user_query}", flush=True)
+    _log(f"Crop     : {crop_hindi or 'N/A'} (alias: {crop_alias or 'N/A'})", flush=True)
+    _log(f"Intent   : {intent}", flush=True)
+    _log(f"Matches  : {len(rows)} rows (threshold-filtered)", flush=True)
 
     top_sim   = rows[0]["similarity"] if rows else 0.0
     top_score = rows[0]["score"]      if rows else 0.0
 
     # Tier decision uses boosted score (includes crop+intent bonus)
-    if top_score >= 0.85:
-        tier = "🟢 DATASET-DIRECT"
-        tier_desc = f"Exact match (score={top_score:.3f}) — bypassing LLM for INSTANT response"
+    # DATASET-DIRECT requires BOTH a high boosted score AND a reasonable raw similarity
+    # to prevent weak matches (e.g. fungus row answering a fertilizer query)
+    if top_score >= 0.80 and top_sim >= 0.55:
+        tier = "DATASET-DIRECT"
+        tier_desc = f"Exact match (score={top_score:.3f}, sim={top_sim:.3f}) — bypassing LLM"
         source_tier = "dataset"
     elif top_score >= 0.50:
-        tier = "🟡 LLM + CONTEXT"
+        tier = "LLM + CONTEXT"
         tier_desc = f"Good match (score={top_score:.3f}) — LLM enriched with dataset context"
         source_tier = "llm+dataset"
     else:
-        tier = "🔴 LLM-ONLY"
+        tier = "LLM-ONLY"
         tier_desc = f"No/weak match (score={top_score:.3f}) — pure LLM knowledge"
         source_tier = "llm"
 
-    print(f"🎯 Source   : {tier}", flush=True)
-    print(f"   {tier_desc}", flush=True)
-    print(f"   top_sim={top_sim:.3f}  top_score={top_score:.3f}", flush=True)
+    _log(f"Source   : {tier}", flush=True)
+    _log(f"   {tier_desc}", flush=True)
+    _log(f"   top_sim={top_sim:.3f}  top_score={top_score:.3f}", flush=True)
     for i, r in enumerate(rows, 1):
-        print(f"  [{i}] sim={r['similarity']:.3f} score={r['score']:.3f} | {r['problem'][:60]}", flush=True)
-    print(f"{'─'*60}", flush=True)
+        _log(f"  [{i}] sim={r['similarity']:.3f} score={r['score']:.3f} | {r['problem'][:60]}", flush=True)
+    _log(f"{'─'*60}", flush=True)
 
     # ── Send metadata to frontend ──────────────────────────────────────────
     meta = {
@@ -881,12 +912,20 @@ def stream_answer(user_query: str):
     }
     yield f"data: {json.dumps(meta, ensure_ascii=False)}\n\n"
 
-    # ── TIER 1: DATASET-DIRECT — skip LLM entirely ────────────────────────
+    # ── TIER 1: DATASET-DIRECT — stream character by character ────────────
     if source_tier == "dataset":
-        print(f"⚡ DATASET-DIRECT: skipping LLM", flush=True)
+        _log(f"DATASET-DIRECT: streaming response", flush=True)
         fb = fallback_response(user_query, crop_hindi, intent, rows)
         fb = hindi_to_english_numbers(fb)
-        yield f"data: {json.dumps({'type': 'token', 'text': fb}, ensure_ascii=False)}\n\n"
+        
+        # Stream character by character for smooth animation
+        import time
+        chunk_size = 1  # Stream 3 characters at a time for smooth effect
+        for i in range(0, len(fb), chunk_size):
+            chunk = fb[i:i+chunk_size]
+            yield f"data: {json.dumps({'type': 'token', 'text': chunk}, ensure_ascii=False)}\n\n"
+            time.sleep(0.02)  # Small delay for streaming effect (10ms per chunk)
+        
         yield f"data: {json.dumps({'type': 'done', 'source': 'dataset'}, ensure_ascii=False)}\n\n"
         return
 

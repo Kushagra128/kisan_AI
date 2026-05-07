@@ -1,4 +1,4 @@
-<style>
+﻿<style>
 			/* ══════════════════════════════════════════
        WIDGET STYLES
     ══════════════════════════════════════════ */
@@ -1393,57 +1393,211 @@
 				}
 			});
 
-			// ── Voice input ────────────────────────────────────────
+			// ── Voice input (Offline STT) ────────────────────────────────────────
+			let wMediaRecorder = null;
+			let wAudioChunks = [];
 			let wListening = false;
-			const WSpeechRec =
-				window.SpeechRecognition || window.webkitSpeechRecognition;
-			if (WSpeechRec) {
-				const wrec = new WSpeechRec();
-				wrec.lang = "hi-IN";
-				wrec.interimResults = false;
-				wrec.maxAlternatives = 1;
-				wrec.onstart = () => {
+			let wAudioContext = null;
+
+			function audioBufferToWav(buffer) {
+				const numChannels = 1;
+				const sampleRate = 16000;
+				const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(numChannels, buffer.duration * sampleRate, sampleRate);
+				const source = offlineCtx.createBufferSource();
+				source.buffer = buffer;
+				source.connect(offlineCtx.destination);
+				source.start(0);
+				return offlineCtx.startRendering().then(renderedBuffer => {
+					const length = renderedBuffer.length * 2;
+					const view = new DataView(new ArrayBuffer(44 + length));
+					const writeString = (view, offset, string) => {
+						for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+					};
+					writeString(view, 0, 'RIFF');
+					view.setUint32(4, 36 + length, true);
+					writeString(view, 8, 'WAVE');
+					writeString(view, 12, 'fmt ');
+					view.setUint32(16, 16, true);
+					view.setUint16(20, 1, true);
+					view.setUint16(22, numChannels, true);
+					view.setUint32(24, sampleRate, true);
+					view.setUint32(28, sampleRate * 2, true);
+					view.setUint16(32, 2, true);
+					view.setUint16(34, 16, true);
+					writeString(view, 36, 'data');
+					view.setUint32(40, length, true);
+					const channelData = renderedBuffer.getChannelData(0);
+					let offset = 44;
+					for (let i = 0; i < channelData.length; i++, offset += 2) {
+						let s = Math.max(-1, Math.min(1, channelData[i]));
+						view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+					}
+					return new Blob([view], { type: 'audio/wav' });
+				});
+			}
+
+			wMic.addEventListener("click", async () => {
+				if (wListening) {
+					// ── Manual STOP ───────────────────────────────────────────
+					wListening = false;
+					wMediaRecorder.stop();
+					wMic.classList.remove("listening");
+					wMic.textContent = "🎤";
+					wMicSt.textContent = "⏳ अंतिम प्रोसेसिंग...";
+					return;
+				}
+
+				try {
+					const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+					wMediaRecorder = new MediaRecorder(stream);
+					wAudioChunks = [];
+					let wIsTranscribing = false;
+					let voiceDone = false;  // flag: final send already triggered
+
+					// ── Helper: transcribe all audio so far → update input ────────
+					async function transcribeAccumulated(isFinal) {
+						if (wIsTranscribing || wAudioChunks.length === 0) return;
+						wIsTranscribing = true;
+						try {
+							const blob = new Blob(wAudioChunks);
+							if (!wAudioContext) wAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+							const arrayBuffer = await blob.arrayBuffer();
+							const audioBuffer = await wAudioContext.decodeAudioData(arrayBuffer);
+							const wavBlob = await audioBufferToWav(audioBuffer);
+							const formData = new FormData();
+							formData.append("audio", wavBlob, "recording.wav");
+							const res = await fetch("/chat/stt", { method: "POST", body: formData });
+							const data = await res.json();
+							if (data.text && data.text.trim() && !voiceDone) {
+								wInput.value = data.text;
+								wInput.style.color = isFinal ? "" : "var(--text-muted, #888)";
+								wInput.style.fontStyle = isFinal ? "" : "italic";
+							}
+						} catch (e) {
+							console.error("STT chunk error:", e);
+						} finally {
+							wIsTranscribing = false;
+						}
+					}
+
+					// ── VAD: monitor volume every 200ms with rolling average ─────────
+					const vadCtx   = new (window.AudioContext || window.webkitAudioContext)();
+					const analyser = vadCtx.createAnalyser();
+					const srcNode  = vadCtx.createMediaStreamSource(stream);
+					srcNode.connect(analyser);
+					analyser.fftSize = 1024;
+					const vadData  = new Uint8Array(analyser.frequencyBinCount);
+
+					const THRESHOLD   = 20;    // avg volume 0–255 to count as speech
+					const WINDOW      = 8;     // rolling window size (8 × 200ms = 1.6s of context)
+					const NEED_SPEECH = 3;     // consecutive above-threshold samples to confirm speech
+					const NEED_SILENCE = 8;    // consecutive below-threshold samples to trigger stop (8×200ms=1.6s)
+
+					const volHistory  = [];
+					let speechStreak  = 0;     // consecutive above-threshold ticks
+					let silenceStreak = 0;     // consecutive below-threshold ticks after speech
+					let hasSpoken     = false;
+					let vadRunning    = true;
+					let autoStopQueued = false;
+
+					const vadInterval = setInterval(() => {
+						if (!vadRunning) { clearInterval(vadInterval); return; }
+
+						analyser.getByteFrequencyData(vadData);
+						// Use mid-frequency range only (ignore very low/high freq noise)
+						const mid = vadData.slice(10, 100);
+						const avg = mid.reduce((a, b) => a + b, 0) / mid.length;
+
+						volHistory.push(avg);
+						if (volHistory.length > WINDOW) volHistory.shift();
+						const rollingAvg = volHistory.reduce((a, b) => a + b, 0) / volHistory.length;
+
+						if (rollingAvg > THRESHOLD) {
+							// ─ Speaking ─
+							speechStreak++;
+							silenceStreak = 0;
+							autoStopQueued = false;
+							if (speechStreak >= NEED_SPEECH) {
+								hasSpoken = true;
+								if (wMicSt.textContent !== "🎤 सुन रहा हूँ...") {
+									wMicSt.textContent = "🎤 सुन रहा हूँ...";
+								}
+							}
+						} else {
+							// ─ Silence ─
+							speechStreak = 0;
+							if (hasSpoken) {
+								silenceStreak++;
+								if (silenceStreak === 3 && wMicSt.textContent !== "⏸ रुक गए...") {
+									wMicSt.textContent = "⏸ रुक गए...";
+								}
+								if (silenceStreak >= NEED_SILENCE && !autoStopQueued && wListening) {
+									autoStopQueued = true;
+									vadRunning = false;
+									clearInterval(vadInterval);
+									wListening = false;
+									wMediaRecorder.stop();
+									wMic.classList.remove("listening");
+									wMic.textContent = "🎤";
+									wMicSt.textContent = "⏳ प्रोसेसिंग...";
+								}
+							}
+						}
+					}, 200);
+
+					// ── Every 2s chunk → partial transcription ────────────────────
+					wMediaRecorder.addEventListener("dataavailable", async (event) => {
+						if (event.data && event.data.size > 0) {
+							wAudioChunks.push(event.data);
+							await transcribeAccumulated(false);
+						}
+					});
+
+					// ── On STOP → final transcription + cleanup ───────────────────
+					wMediaRecorder.addEventListener("stop", async () => {
+						vadRunning = false;
+						clearInterval(vadInterval);
+						stream.getTracks().forEach(t => t.stop());
+						try { vadCtx.close(); } catch(_) {}
+						try {
+							await transcribeAccumulated(true);
+							wInput.style.color = "";
+							wInput.style.fontStyle = "";
+							wMicSt.style.display = "none";
+							if (wInput.value.trim()) {
+								// wSendMessage reads value, appends to chat, then clears box
+								voiceDone = true;  // block late partial transcriptions from re-populating
+								wSendMessage();
+								wInput.value = "";
+								wInput.style.color = "";
+								wInput.style.fontStyle = "";
+								wInput.placeholder = "अपनी समस्या लिखें...";
+							} else {
+								wInput.placeholder = "आवाज़ समझ नहीं आई, दोबारा कोशिश करें...";
+								setTimeout(() => { wInput.placeholder = "अपनी समस्या लिखें..."; }, 3000);
+							}						} catch (e) {
+							wMicSt.style.display = "none";
+							console.error("STT final error:", e);
+						}
+					});
+
+					// ── Start ─────────────────────────────────────────────────────
+					wMediaRecorder.start(2000);
 					wListening = true;
 					wMic.classList.add("listening");
 					wMic.textContent = "⏹";
+					wMicSt.textContent = "🎤 सुन रहा हूँ...";
 					wMicSt.style.display = "block";
-				};
-				wrec.onend = () => {
-					wListening = false;
-					wMic.classList.remove("listening");
-					wMic.textContent = "🎤";
-					wMicSt.style.display = "none";
-				};
-				wrec.onresult = (e) => {
-					wInput.value = e.results[0][0].transcript;
-					setTimeout(wSendMessage, 400);
-				};
-				wrec.onerror = () => wrec.onend();
-				wMic.addEventListener("click", () => {
-					if (wListening) {
-						wrec.stop();
-						return;
-					}
-					try {
-						wrec.start();
-					} catch (e) {}
-				});
-			} else {
-				wMic.style.opacity = "0.35";
-				wMic.style.cursor = "not-allowed";
-				wMic.title = "Voice not supported";
-			}
+					wInput.value = "";
+					wInput.placeholder = "बोलिए... (रुकने पर अपने आप भेजेगा)";
 
-			// ── Voice output ───────────────────────────────────────
-			let _voices = [];
-			function _wLoadVoices() {
-				_wVoices = speechSynthesis.getVoices();
-			}
-			_wLoadVoices();
-			speechSynthesis.onvoiceschanged = _wLoadVoices;
+				} catch (err) {
+					alert("माइक एक्सेस नहीं मिला (Microphone access denied)");
+				}
+			});
 
-			let _wKeepAlive = null;
-			let _wSpeaking = false;
+			// ── Voice output (Offline TTS) ───────────────────────────────────────
+			const wAudioPlayer = new Audio();
 
 			function wCleanForSpeech(text) {
 				return text
@@ -1474,7 +1628,6 @@
 			};
 
 			function wBuildChunks(el) {
-				const chunks = [];
 				let fullText = "";
 				let isReading = false;
 				let hasSections = false;
@@ -1518,72 +1671,37 @@
 				});
 
 				fullText = wCleanForSpeech(fullText);
-				
-				return [{ text: "सुनिए, " + fullText, pause: 0 }];
+				return [{ text: "सुनिए, " + fullText }];
 			}
 
 			function wSpeak(rid, btn) {
 				const el = document.getElementById(rid);
 				if (!el) return;
 
-				speechSynthesis.cancel();
-				clearInterval(_wKeepAlive);
-
+				wStopSpeech();
 				const chunks = wBuildChunks(el);
 				if (!chunks.length) return;
-
-				if (btn) btn.textContent = "⏸ चल रहा...";
-
-				function _wGetVoice() {
-					const voices = speechSynthesis.getVoices();
-					return (
-						voices.find((v) => v.lang.startsWith("hi")) ||
-						voices.find((v) => v.lang.startsWith("en-IN")) ||
-						voices.find((v) => v.lang.startsWith("en")) ||
-						voices[0]
-					);
-				}
-
-				let idx = 0;
-				function speakNext() {
-					if (idx >= chunks.length) {
-						if (btn) btn.textContent = "🔊 सुनें";
-						clearInterval(_wKeepAlive);
-						return;
+				
+				if (btn) btn.textContent = "⏳ लोड हो रहा...";
+				
+				fetch("/chat/tts", {
+					method: "POST",
+					headers: {"Content-Type": "application/json"},
+					body: JSON.stringify({text: chunks[0].text})
+				}).then(res => res.json()).then(data => {
+					if (data.url) {
+						if (btn) btn.textContent = "⏸ चल रहा...";
+						wAudioPlayer.src = data.url;
+						wAudioPlayer.play();
+						wAudioPlayer.onended = () => {
+							if (btn) btn.textContent = "🔊 सुनें";
+						};
+					} else {
+						if (btn) btn.textContent = "❌ त्रुटि";
 					}
-					const chunk = chunks[idx++];
-					setTimeout(() => {
-						const utt = new SpeechSynthesisUtterance(chunk.text);
-						utt.lang = "hi-IN";
-						utt.rate = 0.88;
-						utt.pitch = 1;
-						const hv = _wGetVoice();
-						if (hv) utt.voice = hv;
-						utt.onend = speakNext;
-						utt.onerror = speakNext;
-						speechSynthesis.speak(utt);
-					}, chunk.pause);
-				}
-
-				function _doSpeak() {
-					speakNext();
-					_wKeepAlive = setInterval(() => {
-						if (!speechSynthesis.speaking && !speechSynthesis.pending) {
-							clearInterval(_wKeepAlive);
-						} else {
-							speechSynthesis.resume();
-						}
-					}, 5000);
-				}
-
-				if (speechSynthesis.getVoices().length > 0) {
-					_doSpeak();
-				} else {
-					speechSynthesis.onvoiceschanged = () => {
-						_wLoadVoices();
-						_doSpeak();
-					};
-				}
+				}).catch(e => {
+					if (btn) btn.textContent = "❌ त्रुटि";
+				});
 			}
 
 			function wSpeakSection(btn) {
@@ -1595,10 +1713,10 @@
 					return;
 				}
 				
-				wStopSpeech(); // Stop everything first
+				wStopSpeech(); 
+				btn.textContent = "⏳...";
 				
 				let fullText = "";
-				// Get label text excluding the button
 				const rawHead = head.innerText.replace("🔊", "").replace("⏸", "").trim();
 				let label = rawHead;
 				for (const [key, val] of Object.entries(_wSectionLabels)) {
@@ -1614,7 +1732,7 @@
 					if (curr.nodeType === Node.ELEMENT_NODE) {
 						const cls = curr.className || "";
 						if (cls.includes("w-section-head") || cls.includes("section-head")) {
-							break; // Hit next section
+							break;
 						}
 						fullText += (curr.innerText || curr.textContent) + " ";
 					} else if (curr.nodeType === Node.TEXT_NODE) {
@@ -1622,34 +1740,24 @@
 					}
 					curr = curr.nextSibling;
 				}
-				
 				fullText = wCleanForSpeech(fullText);
-				
-				const utt = new SpeechSynthesisUtterance("सुनिए, " + fullText);
-				utt.lang = "hi-IN";
-				utt.rate = 0.88;
-				utt.pitch = 1;
-				
-				const voices = speechSynthesis.getVoices();
-				const hv = voices.find((v) => v.lang.startsWith("hi")) ||
-						   voices.find((v) => v.lang.startsWith("en-IN")) ||
-						   voices[0];
-				if (hv) utt.voice = hv;
-				
-				btn.textContent = "⏸";
-				
-				utt.onend = () => { btn.textContent = "🔊"; clearInterval(_wKeepAlive); };
-				utt.onerror = () => { btn.textContent = "🔊"; clearInterval(_wKeepAlive); };
-				
-				speechSynthesis.speak(utt);
-				
-				_wKeepAlive = setInterval(() => {
-					if (!speechSynthesis.speaking && !speechSynthesis.pending) {
-						clearInterval(_wKeepAlive);
+
+				fetch("/chat/tts", {
+					method: "POST",
+					headers: {"Content-Type": "application/json"},
+					body: JSON.stringify({text: "सुनिए, " + fullText})
+				}).then(res => res.json()).then(data => {
+					if (data.url) {
+						btn.textContent = "⏸";
+						wAudioPlayer.src = data.url;
+						wAudioPlayer.play();
+						wAudioPlayer.onended = () => { btn.textContent = "🔊"; };
 					} else {
-						speechSynthesis.resume();
+						btn.textContent = "❌";
 					}
-				}, 5000);
+				}).catch(e => {
+					btn.textContent = "❌";
+				});
 			}
 
 			function wRateResponse(btn, type) {
@@ -1659,10 +1767,9 @@
 			}
 
 			function wStopSpeech() {
-				speechSynthesis.cancel();
-				clearInterval(_wKeepAlive);
-				document
-					.querySelectorAll(".w-inline-speak-btn")
-					.forEach((b) => (b.textContent = "🔊"));
+				wAudioPlayer.pause();
+				document.querySelectorAll(".w-inline-speak-btn").forEach((b) => {
+					if (b.textContent === "⏸" || b.textContent === "⏳...") b.textContent = "🔊";
+				});
 			}
 		</script>

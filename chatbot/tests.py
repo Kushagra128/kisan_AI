@@ -1,3 +1,2 @@
-from django.test import TestCase
-
-# Create your tests here.
+# This file is intentionally empty.
+# All tests are in test_comprehensive.py, test_edge_cases.py, and test_accuracy.py
